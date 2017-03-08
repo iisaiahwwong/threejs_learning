@@ -1,11 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
-router.get('/:ID', function(res, req, next) {
-    var id = req.param.ID;
+router.get('/:str', function(res, req, next) {
+    var id = req.param.str;
     switch(id) {
-        case 1:
-            res.render('learning/first');
+        case 'lights':
+            res.render('learning/lights');
             break;
         default:
             res.status(404);
