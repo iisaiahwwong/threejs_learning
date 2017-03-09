@@ -23,37 +23,27 @@ $(function(){
 		
 		/*add controls*/
 		controls = new THREE.OrbitControls( camera, renderer.domElement );
-		//controls.addEventListener( 'change', render );
+		controls.addEventListener( 'change', render );
 		
 		/*adds helpers*/
 		axis =  new THREE.AxisHelper(10);
 		scene.add (axis);
 		
-		grid = new THREE.GridHelper(50, 5, '#000000', '#000000');
+		grid = new THREE.GridHelper(50, 5);
+		color = new THREE.Color("rgb(255,0,0)");
+		grid.setColors(color, 0x000000);
+		
 		scene.add(grid);
 		
 		/*create cube*/
 		cubeGeometry = new THREE.BoxGeometry(5, 5, 5);
+		cubeMaterial = new THREE.MeshLambertMaterial({color:0xff3300});
+		cube  = new THREE.Mesh(cubeGeometry, cubeMaterial);
 		
-		var xDistance = 10;
-		var zDistance = 50;
-		var xOffset = -5;
-		
-		for(var i = 0; i < 4; i++) {
-			for(j=0; j < 2; j++) {
-				cubeMaterial = new THREE.MeshLambertMaterial({color: (j%2==0) ? '#B3FF35' : 'ff3300'});
-				cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-				cube.position.y = 4;
-				cube.position.x = (xDistance * i) + xOffset;
-				cube.position.z = (zDistance * j);
-				scene.add(cube);
-			}
-		}
-		
-		// /*create torus knot*/
-		// torGeometry = new THREE.TorusKnotGeometry( 3, 1, 64, 64);
-		// torMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } );
-		// torusKnot = new THREE.Mesh( torGeometry, torMaterial );
+		/*create torus knot*/
+		torGeometry = new THREE.TorusKnotGeometry( 3, 1, 64, 64);
+		torMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } );
+		torusKnot = new THREE.Mesh( torGeometry, torMaterial );
 		
 		// /*create text*/
 		// textGeometry = new THREE.TextGeometry('Hello  World', {size:2, height:1});
@@ -64,17 +54,23 @@ $(function(){
 		planeGeometry = new THREE.PlaneGeometry (100,100,100);
 		planeMaterial = new THREE.MeshLambertMaterial({color:0xffffff});
 		plane = new THREE.Mesh(planeGeometry, planeMaterial);
-		scene.add(plane);
 		
 		/*position and add objects to scene*/
 		plane.rotation.x = -.5*Math.PI;
 		plane.receiveShadow = true;
+		scene.add(plane);
 		
-		// torusKnot.position.x = -10;
-		// torusKnot.position.y = 6;
-		// torusKnot.position.z = 2.5;
-		// torusKnot.castShadow = true;
-		// scene.add( torusKnot );
+		cube.position.x = 2.5;
+		cube.position.y = 4;
+		cube.position.z = 2.5;
+		cube.castShadow = true;
+		scene.add(cube);
+		
+		torusKnot.position.x = -15;
+		torusKnot.position.y = 6;
+		torusKnot.position.z = 2.5;
+		torusKnot.castShadow = true;
+		scene.add( torusKnot );
 		
 		// text.position.x = 15;
 		// text.position.y = 6;
@@ -112,22 +108,23 @@ $(function(){
 			
 		}
 		/*adds spot light with starting parameters*/
-		spotLight = new THREE.SpotLight(0xffffff, guiControls.intensity, guiControls.distance, guiControls.angle);
+		spotLight = new THREE.SpotLight(0xffffff);
 		spotLight.castShadow = true;
 		spotLight.position.set (20, 35, 40);
+		spotLight.intensity = guiControls.intensity;
+		spotLight.distance = guiControls.distance;
+		spotLight.angle = guiControls.angle;
 		spotLight.exponent = guiControls.exponent;
 		spotLight.shadow.camera.near = guiControls.shadowCameraNear;
 		spotLight.shadow.camera.far = guiControls.shadowCameraFar;
 		spotLight.shadow.camera.fov = guiControls.shadowCameraFov;
 		spotLight.shadow.camera.visible = guiControls.shadowCameraVisible;
-		
-		var schelper = new THREE.CameraHelper(spotLight.shadow.camera);
-		//test.camera.visible = true;
-		
 		spotLight.shadow.bias = guiControls.shadowBias;
-		spotLight.shadow.darkness = guiControls.shadowDarkness;
+		spotLight.castShadow = true;
 		scene.add(spotLight);
-		scene.add(schelper);
+		
+		var helper = new THREE.CameraHelper( spotLight.shadow.camera );
+		scene.add( helper );
 		
 		/*adds controls to scene*/
 		datGUI = new dat.GUI();
@@ -140,13 +137,16 @@ $(function(){
 		datGUI.add(guiControls, 'lightY',0,180);
 		datGUI.add(guiControls, 'lightZ',-60,180);
 		
-		datGUI.add(guiControls, 'target', ['cube', 'torusKnot']).onChange(function(){
+		datGUI.add(guiControls, 'target', ['cube', 'torusKnot','text']).onChange(function(){
 			if (guiControls.target == 'cube'){
 				spotLight.target =  cube;
 			}
 			else if (guiControls.target == 'torusKnot'){
 				spotLight.target =  torusKnot;
 			}
+			// else if (guiControls.target == 'text'){
+			// 	spotLight.target =  text;
+			// }
 		});
 		datGUI.add(guiControls, 'intensity',0.01, 5).onChange(function(value){
 			spotLight.intensity = value;
@@ -161,29 +161,27 @@ $(function(){
 			spotLight.exponent = value;
 		});
 		datGUI.add(guiControls, 'shadowCameraNear',0,100).name("Near").onChange(function(value){
-			spotLight.shadow.camera.near = value;
-			spotLight.shadow.camera.updateProjectionMatrix();
+			spotLight.shadowCamera.near = value;
+			spotLight.shadowCamera.updateProjectionMatrix();
 		});
 		datGUI.add(guiControls, 'shadowCameraFar',0,5000).name("Far").onChange(function(value){
-			spotLight.shadow.camera.far = value;
-			spotLight.shadow.camera.updateProjectionMatrix();
+			spotLight.shadowCamera.far = value;
+			spotLight.shadowCamera.updateProjectionMatrix();
 		});
 		datGUI.add(guiControls, 'shadowCameraFov',1,180).name("Fov").onChange(function(value){
-			spotLight.shadow.camera.fov = value;
-			spotLight.shadow.camera.updateProjectionMatrix();
+			spotLight.shadowCamera.fov = value;
+			spotLight.shadowCamera.updateProjectionMatrix();
 		});
 		datGUI.add(guiControls, 'shadowCameraVisible').onChange(function(value){
-			spotLight.shadow.camera.visible = value;
-			spotLight.shadow.camera.updateProjectionMatrix();
+			spotLight.shadowCamera.updateProjectionMatrix();
 		});
-		
 		datGUI.add(guiControls, 'shadowBias',0,1).onChange(function(value){
-			spotLight.shadow.bias = value;
-			spotLight.shadow.camera.updateProjectionMatrix();
+			spotLight.shadowBias = value;
+			spotLight.shadowCamera.updateProjectionMatrix();
 		});
 		datGUI.add(guiControls, 'shadowDarkness',0,1).onChange(function(value){
-			spotLight.shadow.darkness = value;
-			spotLight.shadow.camera.updateProjectionMatrix();
+			spotLight.shadowDarkness = value;
+			spotLight.shadowCamera.updateProjectionMatrix();
 		});
 		datGUI.close();
 		
