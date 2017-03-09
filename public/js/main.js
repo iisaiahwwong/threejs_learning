@@ -105,23 +105,22 @@ $(function(){
 			
 		}
 		/*adds spot light with starting parameters*/
-		spotLight = new THREE.SpotLight(0xffffff);
+		spotLight = new THREE.SpotLight(0xffffff, guiControls.intensity, guiControls.distance, guiControls.angle);
 		spotLight.castShadow = true;
 		spotLight.position.set (20, 35, 40);
-		spotLight.intensity = guiControls.intensity;
-		spotLight.distance = guiControls.distance;
-		spotLight.angle = guiControls.angle;
 		spotLight.exponent = guiControls.exponent;
 		spotLight.shadow.camera.near = guiControls.shadowCameraNear;
 		spotLight.shadow.camera.far = guiControls.shadowCameraFar;
 		spotLight.shadow.camera.fov = guiControls.shadowCameraFov;
 		spotLight.shadow.camera.visible = guiControls.shadowCameraVisible;
-		//var test = new THREE.CameraHelper(spotLight.shadow);
+		
+		var schelper = new THREE.CameraHelper(spotLight.shadow.camera);
 		//test.camera.visible = true;
 		
 		spotLight.shadow.bias = guiControls.shadowBias;
 		spotLight.shadow.darkness = guiControls.shadowDarkness;
 		scene.add(spotLight);
+		scene.add(schelper);
 		
 		/*adds controls to scene*/
 		datGUI = new dat.GUI();
@@ -173,6 +172,7 @@ $(function(){
 			spotLight.shadow.camera.visible = value;
 			spotLight.shadow.camera.updateProjectionMatrix();
 		});
+		
 		datGUI.add(guiControls, 'shadowBias',0,1).onChange(function(value){
 			spotLight.shadow.bias = value;
 			spotLight.shadow.camera.updateProjectionMatrix();
