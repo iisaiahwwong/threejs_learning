@@ -34,13 +34,26 @@ $(function(){
 		
 		/*create cube*/
 		cubeGeometry = new THREE.BoxGeometry(5, 5, 5);
-		cubeMaterial = new THREE.MeshLambertMaterial({color:0xff3300});
-		cube  = new THREE.Mesh(cubeGeometry, cubeMaterial);
 		
-		/*create torus knot*/
-		torGeometry = new THREE.TorusKnotGeometry( 3, 1, 64, 64);
-		torMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } );
-		torusKnot = new THREE.Mesh( torGeometry, torMaterial );
+		var xDistance = 10;
+		var zDistance = 50;
+		var xOffset = -5;
+		
+		for(var i = 0; i < 4; i++) {
+			for(j=0; j < 2; j++) {
+				cubeMaterial = new THREE.MeshLambertMaterial({color: (j%2==0) ? '#B3FF35' : 'ff3300'});
+				cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+				cube.position.y = 4;
+				cube.position.x = (xDistance * i) + xOffset;
+				cube.position.z = (zDistance * j);
+				scene.add(cube);
+			}
+		}
+		
+		// /*create torus knot*/
+		// torGeometry = new THREE.TorusKnotGeometry( 3, 1, 64, 64);
+		// torMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00 } );
+		// torusKnot = new THREE.Mesh( torGeometry, torMaterial );
 		
 		// /*create text*/
 		// textGeometry = new THREE.TextGeometry('Hello  World', {size:2, height:1});
@@ -51,23 +64,17 @@ $(function(){
 		planeGeometry = new THREE.PlaneGeometry (100,100,100);
 		planeMaterial = new THREE.MeshLambertMaterial({color:0xffffff});
 		plane = new THREE.Mesh(planeGeometry, planeMaterial);
+		scene.add(plane);
 		
 		/*position and add objects to scene*/
 		plane.rotation.x = -.5*Math.PI;
 		plane.receiveShadow = true;
-		scene.add(plane);
 		
-		cube.position.x = 2.5;
-		cube.position.y = 4;
-		cube.position.z = 2.5;
-		cube.castShadow = true;
-		scene.add(cube);
-		
-		torusKnot.position.x = -15;
-		torusKnot.position.y = 6;
-		torusKnot.position.z = 2.5;
-		torusKnot.castShadow = true;
-		scene.add( torusKnot );
+		// torusKnot.position.x = -10;
+		// torusKnot.position.y = 6;
+		// torusKnot.position.z = 2.5;
+		// torusKnot.castShadow = true;
+		// scene.add( torusKnot );
 		
 		// text.position.x = 15;
 		// text.position.y = 6;
@@ -133,15 +140,12 @@ $(function(){
 		datGUI.add(guiControls, 'lightY',0,180);
 		datGUI.add(guiControls, 'lightZ',-60,180);
 		
-		datGUI.add(guiControls, 'target', ['cube', 'torusKnot','text']).onChange(function(){
+		datGUI.add(guiControls, 'target', ['cube', 'torusKnot']).onChange(function(){
 			if (guiControls.target == 'cube'){
 				spotLight.target =  cube;
 			}
 			else if (guiControls.target == 'torusKnot'){
 				spotLight.target =  torusKnot;
-			}
-			else if (guiControls.target == 'text'){
-				spotLight.target =  text;
 			}
 		});
 		datGUI.add(guiControls, 'intensity',0.01, 5).onChange(function(value){
