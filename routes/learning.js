@@ -10,7 +10,11 @@ router.get('/axis', function(req, res, next) {
 });
 
 router.get('/curve', function(req, res, next) {
-	res.render('learning/curve', { title: 'Curve'} );
+    res.render('learning/curve', { title: 'Curve'} );
+});
+
+router.get('/mesh', function(req, res, next) {
+    res.render('learning/mesh', { title: 'Mesh'} );
 });
 
 module.exports = router;
