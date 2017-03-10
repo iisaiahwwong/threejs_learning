@@ -2,12 +2,11 @@
 
 </div>
 <script type="text/javascript" src="/js/vendor/dat.gui.js"></script>
-<script type="text/javascript" src="js/vendor/GeometryUtils.js"></script>
-<script type="text/javascript" src="js/vendor/FontUtils.js"></script>
-<script type="text/javascript" src="js/vendor/helvetiker_regular.typeface.js"></script>
+<script type="text/javascript" src="/js/vendor/GeometryUtils.js"></script>
+<script type="text/javascript" src="/js/vendor/FontUtils.js"></script>
+<script type="text/javascript" src="/js/vendor/helvetiker_regular.typeface.js"></script>
 <script>
 	$(function(){
-
 		var scene, camera, renderer;
 		var controls, guiControls, datGUI;
 		var axis, grid, color;
@@ -209,8 +208,8 @@
 		}
 
 		function render() {
-
-			cube.rotation.x += guiControls.rotationX;
+			console.log(cube.rotation.x);
+			cube.position.x += guiControls.rotationX;
 			cube.rotation.y += guiControls.rotationY;
 			cube.rotation.z += guiControls.rotationZ;
 
@@ -237,9 +236,6 @@
 			camera.updateProjectionMatrix();
 
 			renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
-
-
-
 		});
 	});
 </script>
