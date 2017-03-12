@@ -1,0 +1,90 @@
+<div id="container">
+
+</div>
+<script>
+  var camera, scene, renderer, controls;
+
+  var width = window.innerWidth,
+      height = window.innerHeight;
+
+  $(function() {
+    init();
+    initCircleProperties();
+    animate();
+  });
+
+  function init() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, width/height, .1, 500);
+    camera.position.z = 10;
+
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setClearColor(0x000000, 0.1);
+    renderer.setSize(width, height);
+
+    controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+
+    $("#container").append(renderer.domElement);
+
+    $(window).resize(function(){
+      var SCREEN_WIDTH = window.innerWidth;
+      var SCREEN_HEIGHT = window.innerHeight;
+
+      camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+    });
+  }
+
+  var x, y, z, radius, angle;
+  var obj, objResolution;
+
+  var waveAmount, waveHeight;
+  var radiusAddOn;
+  var sinePercentage;
+  
+  function initCircleProperties() {
+    radius = 1;
+    objResolution = 361;
+    obj = new THREE.Line(new THREE.Geometry, new THREE.LineBasicMaterial({color:0xf9f9f9}));
+    sinePercentage = 0.5; // setting in percantage how big is the part
+
+    // Wave
+    waveAmount = 12;
+    waveHeight = 0.1*radius;
+
+    for(var i = 0; i < objResolution; i++) {
+      // Converts each angle to radians
+      angle = Math.PI/180 * i;
+      radiusAddOn = (i < sinePercentage * objResolution) ? waveHeight * Math.sin(angle*waveAmount) : 0 ;
+
+      x = ((radiusAddOn!=-1) ? radius + radiusAddOn : radius) * Math.cos(angle);       // X coordinates
+      y = ((radiusAddOn!=-1) ? radius + radiusAddOn : radius) * Math.sin(angle);       // Y coordinates
+      z = 0;
+
+      obj.geometry.vertices.push(new THREE.Vector3(x, y, z));
+
+      scene.add(obj);
+    }
+  }
+
+  var speedIncrementer = counter/100;
+  radiusAddOn = waveHeight * smooth*Math.sin((angle+speed_incrementer)*waves_amount);
+
+  function updatePoints() {
+
+  }
+
+  var counter = 0; //  we will base our animation on chages of this counter
+
+  function animate() {
+    counter++;
+    updatePoints();
+
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
+
+</script>
