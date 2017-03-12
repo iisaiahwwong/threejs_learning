@@ -33,5 +33,9 @@ router.get('/ironman', function(req, res, next) {
 	res.render('learning/ironman.hbs', { title: 'Iron Man' });
 });
 
+router.get('/audio', function(req, res, next) {
+	res.render('learning/audio.hbs', { title: 'Audio!!!' });
+});
+
 
 module.exports = router;

@@ -9,6 +9,7 @@ var expressHBS = require('express-handlebars');
 // Routes
 var index = require('./routes/index');
 var learning = require('./routes/learning');
+var custom = require('./routes/custom');
 
 var app = express();
 
@@ -29,6 +30,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/learning', learning);
+app.use('/custom', custom);
 app.use('/', index);
 
 // catch 404 and forward to error handler

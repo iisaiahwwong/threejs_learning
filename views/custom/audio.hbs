@@ -1,0 +1,221 @@
+<div class="container">
+  <label id="guide" style="position:fixed;color:white; margin:10px;">Drag and drop a mp3 file</label>
+</div>
+<script>
+  var visualizer;
+
+  $(function() {
+    visualizer = new AudioVisualizer();
+    visualizer.initialize();
+    visualizer.createBars();
+    visualizer.setupAudioProcessing();
+    visualizer.handleDrop();
+  });
+
+  // Rendering Class
+  function AudioVisualizer() {
+    // Constants
+    this.numberOfBars = 10;
+
+    this.scene;
+    this.camera;
+    this.renderer;
+    this.controls;
+
+    // Bars
+    this.bars = new Array();
+
+    // Audio
+    this.javascriptNode;
+    this.audioContext;
+    this.sourceBuffer;
+    this.analyser;
+  };
+
+  AudioVisualizer.prototype.initialize = function() {
+    var width = window.innerWidth,
+            height = window.innerHeight;
+
+    // Instantiate Scene
+    this.scene = new THREE.Scene();
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setSize(width, height);
+
+    // Append renderer to body
+    document.body.appendChild(this.renderer.domElement);
+
+    // Create and add camera
+    this.camera = new THREE.PerspectiveCamera();
+    this.camera.position.set(0, 45, 0);
+    this.scene.add(this.camera);
+
+    var instance = this;
+
+    // Background color of the scene
+    this.renderer.setClearColor(0x333F47, 1);
+
+    // Create a light and add it to the scene
+    var light = new THREE.PointLight(0xffffff);
+    light.position.set(-100, 200, 100);
+    this.scene.add(light);
+
+    //Add interation capability to the scene
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+    // Create responsiveness
+    window.addEventListener('resize', function() {
+      var width = window.innerWidth,
+              height = window.innerHeight;
+
+      instance.renderer.setSize(width, height);
+      instance.camera.aspect = width/height;
+      instance.camera.updateProjectionMatrix();
+    });
+  };
+
+  //create the bars required to show the visualization
+  AudioVisualizer.prototype.createBars = function () {
+
+    //iterate and create bars
+    for (var i = 0; i < this.numberOfBars; i++) {
+
+      //create a bar
+      var barGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+
+      //create a material
+      var material = new THREE.MeshPhongMaterial({
+        color: this.getRandomColor()
+      });
+
+      //create the geometry and set the initial position
+      this.bars[i] = new THREE.Mesh(barGeometry, material);
+      this.bars[i].position.set(i - this.numberOfBars/2, 0, 0);
+
+      //add the created bar to the scene
+      this.scene.add(this.bars[i]);
+    }
+  };
+
+  AudioVisualizer.prototype.handleDrop = function() {
+    //drag Enter
+    document.body.addEventListener("dragenter", function () {
+
+    }, false);
+
+    //drag over
+    document.body.addEventListener("dragover", function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }, false);
+
+    //drag leave
+    document.body.addEventListener("dragleave", function () {
+
+    }, false);
+
+    //drop
+    document.body.addEventListener("drop", function (e) {
+      e.stopPropagation();
+
+      e.preventDefault();
+
+      //get the file
+      var file = e.dataTransfer.files[0];
+      var fileName = file.name;
+
+      $("#guide").text("Playing " + fileName);
+
+      var fileReader = new FileReader();
+
+      fileReader.onload = function (e) {
+        var fileResult = e.target.result;
+        visualizer.start(fileResult);
+      };
+
+      fileReader.onerror = function (e) {
+        debugger
+      };
+
+      fileReader.readAsArrayBuffer(file);
+    }, false);
+  };
+
+  AudioVisualizer.prototype.setupAudioProcessing = function() {
+    // Get audio context
+    this.audioContext = new AudioContext();
+
+    // Create javascript node
+    this.javascriptNode = this.audioContext.createScriptProcessor(2048, 1, 1);
+    this.javascriptNode.connect(this.audioContext.destination);
+
+    // Create source buffer
+    this.sourceBuffer = this.audioContext.createBufferSource();
+
+    // Create analyser node
+    this.analyser = this.audioContext.createAnalyser();
+    this.analyser.smoothingTimeConstant = 0.3;
+    this.analyser.fftSize = 256;
+
+    // Connect source to analyser
+    this.sourceBuffer.connect(this.analyser);
+
+    // Analyse to speakers
+    this.analyser.connect(this.javascriptNode);
+
+    //connect source to analyser
+    this.sourceBuffer.connect(this.audioContext.destination);
+
+    var instance = this;
+
+    this.javascriptNode.onaudioprocess = function () {
+      // get the average for the first channel
+      var array = new Uint8Array(instance.analyser.frequencyBinCount);
+      instance.analyser.getByteFrequencyData(array);
+
+      // Render the scene and update controls
+      visualizer.renderer.render(visualizer.scene, visualizer.camera);
+
+      var step = Math.round(array.length / visualizer.numberOfBars);
+
+      console.log('Step: '+step);
+      console.log('A-Length: ' + array.length);
+
+      //Iterate through the bars and scale the z axis
+      for (var i = 0; i < visualizer.numberOfBars; i++) {
+        var value = array[i * step] / 4;
+        console.log("Value " + value);
+
+        value = value < 1 ? 1 : value;
+        visualizer.bars[i].scale.y = value;
+      }
+    }
+  };
+
+  //start the audio processing
+  AudioVisualizer.prototype.start = function (buffer) {
+    this.audioContext.decodeAudioData(buffer, decodeAudioDataSuccess, decodeAudioDataFailed);
+    var that = this;
+
+    function decodeAudioDataSuccess(decodedBuffer) {
+      that.sourceBuffer.buffer = decodedBuffer
+      that.sourceBuffer.start(0);
+    }
+
+    function decodeAudioDataFailed() {
+      debugger
+    }
+  };
+
+  //util method to get random colors to make stuff interesting
+  AudioVisualizer.prototype.getRandomColor = function () {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
+</script>
