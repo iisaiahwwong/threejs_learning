@@ -1,6 +1,7 @@
 <div id="container">
 
 </div>
+
 <script>
   var camera, scene, renderer, controls;
 
@@ -10,7 +11,7 @@
   $(function() {
     init();
     initCircleProperties();
-    animate();
+		animate();
   });
 
   function init() {
@@ -22,7 +23,7 @@
     renderer.setClearColor(0x000000, 0.1);
     renderer.setSize(width, height);
 
-    controls = new THREE.OrbitControls( camera, renderer.domElement );
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
 
 
     $("#container").append(renderer.domElement);
@@ -41,47 +42,82 @@
   var x, y, z, radius, angle;
   var obj, objResolution;
 
+	var colors=[0x379392,0x2E4952,0x0BC9C7];
+	var group = new THREE.Object3D();
+	var waves = [];
+
   var waveAmount, waveHeight;
   var radiusAddOn;
   var sinePercentage;
   
   function initCircleProperties() {
-    radius = 1;
-    objResolution = 361;
-    obj = new THREE.Line(new THREE.Geometry, new THREE.LineBasicMaterial({color:0xf9f9f9}));
-    sinePercentage = 0.5; // setting in percantage how big is the part
+		var material = new THREE.LineBasicMaterial({
+			color: 0x0000ff,
+			linewidth: 6
+		});
 
-    // Wave
-    waveAmount = 12;
-    waveHeight = 0.1*radius;
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push(
+						new THREE.Vector3( -10, 0, 0 ),
+						new THREE.Vector3( 0, 10, 0 ),
+						new THREE.Vector3( 10, 0, 0 )
+		);
 
-    for(var i = 0; i < objResolution; i++) {
-      // Converts each angle to radians
-      angle = Math.PI/180 * i;
-      radiusAddOn = (i < sinePercentage * objResolution) ? waveHeight * Math.sin(angle*waveAmount) : 0 ;
+		var line = new THREE.Line( geometry, material );
+		scene.add( line );
+		scene.add(group);
 
-      x = ((radiusAddOn!=-1) ? radius + radiusAddOn : radius) * Math.cos(angle);       // X coordinates
-      y = ((radiusAddOn!=-1) ? radius + radiusAddOn : radius) * Math.sin(angle);       // Y coordinates
-      z = 0;
-
-      obj.geometry.vertices.push(new THREE.Vector3(x, y, z));
-
-      scene.add(obj);
-    }
   }
 
-  var speedIncrementer = counter/100;
-  radiusAddOn = waveHeight * smooth*Math.sin((angle+speed_incrementer)*waves_amount);
+  var speedIncrementer;
+	var smoothingAmount = 0.14; // how big part of the wave should be smoothed
+	var smoothPercentage = 1;
 
-  function updatePoints() {
+  function updatePoints(waveType, type) {
+  	var newPositions = [];
 
+  	for(var i = 0; i <= objResolution; i++) {
+  		// angle in radians
+  		angle = Math.PI/180 * i;
+  		radiusAddOn = 0;
+			speedIncrementer = counter/100;
+
+			if(i < sinePercentage * objResolution || i == objResolution) {
+				if(i < sinePercentage * objResolution * smoothingAmount)
+					smoothPercentage = i/(sinePercentage * objResolution * smoothingAmount);
+
+				if(i > sinePercentage * objResolution * (1-smoothingAmount) &&
+								i <= sinePercentage * objResolution)
+					smoothPercentage =( sinePercentage * objResolution-i)/(sinePercentage * objResolution * smoothingAmount);
+				if(i == objResolution)
+					smoothPercentage = 0;
+
+				if(waveType==1) radiusAddOn=waveHeight*smoothPercentage*Math.cos((angle+speedIncrementer)*waveAmount);
+				if(waveType==0) radiusAddOn=waveHeight*smoothPercentage*Math.sin((angle+speedIncrementer)*waveAmount);
+				if(waveType==2) radiusAddOn=waveHeight*smoothPercentage*Math.cos((angle+Math.PI/180*120+speedIncrementer)*waveAmount);
+			}
+
+
+			// radiusAddOn = waveHeight * smoothPercentage * Math.sin((angle+speedIncrementer)*waveAmount);
+
+			x = (radius+radiusAddOn) * Math.cos(angle + speedIncrementer);
+			y = (radius+radiusAddOn) * Math.sin(angle + speedIncrementer);
+			z = 0;
+
+			newPositions.push(new THREE.Vector3(x, y, z));
+		}
+
+		return newPositions;
   }
 
   var counter = 0; //  we will base our animation on chages of this counter
 
   function animate() {
     counter++;
-    updatePoints();
+		for (var i = 0; i <  waves.length; i++) {
+			waves[i].geometry.vertices = updatePoints(i);
+			waves[i].geometry.verticesNeedUpdate = true;
+		}
 
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
