@@ -1,12 +1,16 @@
+<div><p style="color: white; position: absolute; font-size: 100px">Hello</p></div>
 <div id="container">
 
 </div>
 
 <script>
 	var camera, scene, renderer, controls;
+	var mouse, raycaster;
 
 	var width = window.innerWidth,
-					height = window.innerHeight;
+			height = window.innerHeight;
+
+	var objects = [];
 
 	$(function() {
 		init();
@@ -25,6 +29,12 @@
 
 		controls = new THREE.OrbitControls(camera, renderer.domElement);
 
+		raycaster = new THREE.Raycaster();
+		mouse = new THREE.Vector2();
+
+		//add event listener for mouse and calls function when activated
+		document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+		document.addEventListener( 'touchstart', onDocumentTouchStart, false );
 
 		$("#container").append(renderer.domElement);
 
@@ -39,107 +49,125 @@
 		});
 	}
 
+	function onDocumentTouchStart( event ) {
+
+		event.preventDefault();
+
+		event.clientX = event.touches[0].clientX;
+		event.clientY = event.touches[0].clientY;
+		onDocumentMouseDown( event );
+
+	}
+
+	function onDocumentMouseDown( event ) {
+		event.preventDefault();
+
+		mouse.x = ( event.clientX / renderer.domElement.width ) * 2 - 1;
+		mouse.y = - ( event.clientY / renderer.domElement.height ) * 2 + 1;
+
+		raycaster.setFromCamera( mouse, camera );
+
+		var intersects = raycaster.intersectObjects(objects);
+
+		if ( intersects.length > 0 ) {
+			this.temp = intersects[ 0 ].object.userData;
+			this.name = intersects[ 0 ].object.name;
+			console.log(this.temp);
+		}
+	}
+
 	var x, y, z, radius, angle;
 	var obj, objResolution;
 
-	var colors=[0x379392,0x2E4952,0x0BC9C7];
-	var group = new THREE.Object3D();
-	var waves = [];
+	var material, geometry;
 
-	var waveAmount, waveHeight;
-	var radiusAddOn;
-	var sinePercentage;
+	var colors=[0x379392,0x2E4952,0x0BC9C7];
 
 	function initCircleProperties() {
 		radius = 1;
 		objResolution = 361;
-		sinePercentage = 0.5; // setting in percantage how big is the part
 
-		// Wave
-		waveAmount = 12;
-		waveHeight = 0.1*radius;
+		geometry = new THREE.Geometry();
+		material = new THREE.LineBasicMaterial({
+			color: colors[0]
+		});
 
-		for(var i = 0; i < colors.length; i++) {
-			var clr = colors[i];
-			obj = new THREE.Line(new THREE.Geometry, new THREE.LineBasicMaterial({ linewidth: 100
-			}));
+		for(var i = 0; i < objResolution; i++) {
+			// Convert angle to radians
+			angle = i * Math.PI/180;
 
-			obj.geometry.dynamic = true;
-			obj.geometry.verticesNeedUpdate = true;
-
-			group.add(obj);
-			waves.push(obj);
-			console.log(obj.geometry);
-		}
-
-
-		scene.add(group);
-
-//    for(var i = 0; i < objResolution; i++) {
-//      // Converts each angle to radians
-//      angle = Math.PI/180 * i;
-//      radiusAddOn = (i < sinePercentage * objResolution) ? waveHeight * Math.sin(angle*waveAmount) : 0 ;
-//
-//      x = ((radiusAddOn!=-1) ? radius + radiusAddOn : radius) * Math.cos(angle);       // X coordinates
-//      y = ((radiusAddOn!=-1) ? radius + radiusAddOn : radius) * Math.sin(angle);       // Y coordinates
-//      z = 0;
-//
-//      obj.geometry.vertices.push(new THREE.Vector3(x, y, z));
-//
-//      scene.add(obj);
-//    }
-	}
-
-	var speedIncrementer;
-	var smoothingAmount = 0.14; // how big part of the wave should be smoothed
-	var smoothPercentage = 1;
-
-	function updatePoints(waveType, type) {
-		var newPositions = [];
-
-		for(var i = 0; i <= objResolution; i++) {
-			// angle in radians
-			angle = Math.PI/180 * i;
-			radiusAddOn = 0;
-			speedIncrementer = counter/100;
-
-			if(i < sinePercentage * objResolution || i == objResolution) {
-				if(i < sinePercentage * objResolution * smoothingAmount)
-					smoothPercentage = i/(sinePercentage * objResolution * smoothingAmount);
-
-				if(i > sinePercentage * objResolution * (1-smoothingAmount) &&
-								i <= sinePercentage * objResolution)
-					smoothPercentage =( sinePercentage * objResolution-i)/(sinePercentage * objResolution * smoothingAmount);
-				if(i == objResolution)
-					smoothPercentage = 0;
-
-				if(waveType==1) radiusAddOn=waveHeight*smoothPercentage*Math.cos((angle+speedIncrementer)*waveAmount);
-				if(waveType==0) radiusAddOn=waveHeight*smoothPercentage*Math.sin((angle+speedIncrementer)*waveAmount);
-				if(waveType==2) radiusAddOn=waveHeight*smoothPercentage*Math.cos((angle+Math.PI/180*120+speedIncrementer)*waveAmount);
-			}
-
-
-			// radiusAddOn = waveHeight * smoothPercentage * Math.sin((angle+speedIncrementer)*waveAmount);
-
-			x = (radius+radiusAddOn) * Math.cos(angle + speedIncrementer);
-			y = (radius+radiusAddOn) * Math.sin(angle + speedIncrementer);
+			// X Coordinates
+			x = radius * Math.cos(angle);
+			y = radius * Math.sin(angle);
 			z = 0;
 
-			newPositions.push(new THREE.Vector3(x, y, z));
+			geometry.vertices.push(new THREE.Vector3(x, y, z));
 		}
 
-		return newPositions;
+		for(var i = 0; i < 3; i++) {
+			obj = new THREE.Line(geometry, material);
+			obj.position.z = i-1;
+			obj.userData = { index: i };
+			scene.add(obj);
+			objects.push(obj);
+		}
+		var spritey = makeTextSprite( " Hello, ",
+						{ fontsize: 24, borderColor: {r:255, g:0, b:0, a:1.0}, backgroundColor: {r:255, g:100, b:100, a:0.8} } );
+		spritey.position.set(0,45,0);
+		scene.add( spritey );
 	}
 
-	var counter = 0; //  we will base our animation on chages of this counter
+	function makeTextSprite( message, parameters ) {
+		if ( parameters === undefined ) parameters = {};
+		var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "Arial";
+		var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 18;
+		var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 4;
+		var borderColor = parameters.hasOwnProperty("borderColor") ?parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+		var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+		var textColor = parameters.hasOwnProperty("textColor") ?parameters["textColor"] : { r:0, g:0, b:0, a:1.0 };
+
+		var canvas = document.createElement('canvas');
+		var context = canvas.getContext('2d');
+		context.font = "Bold " + fontsize + "px " + fontface;
+		var metrics = context.measureText( message );
+		var textWidth = metrics.width;
+
+		context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + "," + backgroundColor.b + "," + backgroundColor.a + ")";
+		context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + "," + borderColor.b + "," + borderColor.a + ")";
+
+		context.lineWidth = borderThickness;
+		roundRect(context, borderThickness/2, borderThickness/2, (textWidth + borderThickness) * 1.1, fontsize * 1.4 + borderThickness, 8);
+
+		context.fillStyle = "rgba("+textColor.r+", "+textColor.g+", "+textColor.b+", 1.0)";
+		context.fillText( message, borderThickness, fontsize + borderThickness);
+
+		var texture = new THREE.Texture(canvas)
+		texture.needsUpdate = true;
+
+		var spriteMaterial = new THREE.SpriteMaterial( { map: texture, useScreenCoordinates: false } );
+		var sprite = new THREE.Sprite( spriteMaterial );
+		sprite.scale.set(0.5 * fontsize, 0.25 * fontsize, 0.75 * fontsize);
+		return sprite;
+	}
+
+	function roundRect(ctx, x, y, w, h, r)
+	{
+		ctx.beginPath();
+		ctx.moveTo(x+r, y);
+		ctx.lineTo(x+w-r, y);
+		ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+		ctx.lineTo(x+w, y+h-r);
+		ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+		ctx.lineTo(x+r, y+h);
+		ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+		ctx.lineTo(x, y+r);
+		ctx.quadraticCurveTo(x, y, x+r, y);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+	}
 
 	function animate() {
-		counter++;
-		for (var i = 0; i <  waves.length; i++) {
-			waves[i].geometry.vertices = updatePoints(i);
-			waves[i].geometry.verticesNeedUpdate = true;
-		}
-
 		requestAnimationFrame(animate);
 		renderer.render(scene, camera);
 	}
