@@ -33,8 +33,8 @@
 		text-align: center;
 	}
 
-	.element {
-		width: 120px;
+	.file {
+		width: 300px;
 		height: 160px;
 		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
 		border: 1px solid rgba(127,255,255,0.25);
@@ -42,20 +42,20 @@
 		cursor: default;
 	}
 
-	.element:hover {
+	.file:hover {
 		box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
 		border: 1px solid rgba(127,255,255,0.75);
 	}
 
-	.element .number {
+	.file .id {
 		position: absolute;
 		top: 20px;
 		right: 20px;
-		font-size: 12px;
+		font-size: 30px;
 		color: rgba(127,255,255,0.75);
 	}
 
-	.element .symbol {
+	.file .name {
 		position: absolute;
 		top: 40px;
 		left: 0px;
@@ -66,12 +66,12 @@
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
 	}
 
-	.element .details {
+	.file .type {
 		position: absolute;
 		bottom: 15px;
 		left: 0px;
 		right: 0px;
-		font-size: 12px;
+		font-size: 20px;
 		color: rgba(127,255,255,0.75);
 	}
 
@@ -100,23 +100,176 @@
 	<button id="helix">HELIX</button>
 	<button id="grid">GRID</button>
 </div>
+<script src="/js/vendor/CSS3DRenderer.js"></script>
+<script src="/js/vendor/tween.min.js"></script>
 <script>
-	var file = {
-		id: "",
-		name: "",
-		type: ""
-	};
-
-	var table = [];
-
 	var camera, scene, renderer;
 	var controls;
 
+	var table = [];
 	var objects = [];
 	var targets = { table: [], sphere: [], helix: [], grid: [] };
 
+	$(function() {
+		init();
+		animate();
+		listener();
+	});
+
+	function FileNode() {
+		this.file;
+		this.id;
+		this.name;
+		this.type;
+	}
+
+	FileNode.prototype.initialize = function(table) {
+		var file = this.file;
+		var id = this.id;
+		var name = this.name;
+		var type = this.type;
+
+
+		for(var i = 0; i < table.length; i++) {
+			var fileId = table[i].id;
+			var fileName = table[i].name;
+			var fileType = table[i].type;
+
+			file = document.createElement('div');
+			file.className = 'file';
+			file.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
+
+			id = document.createElement('div');
+			id.className = 'id';
+			id.textContent = (fileId);
+			file.appendChild(id);
+
+			name = document.createElement('div');
+			name.className = 'name';
+			name.textContent = fileName;
+			file.appendChild(name);
+
+			type = document.createElement('div');
+			type.className = 'type';
+			type.textContent = fileType;
+			file.appendChild(type);
+
+			var object = new THREE.CSS3DObject(file);
+			object.position.x = Math.random() * 4000 - 2000;
+			object.position.y = Math.random() * 4000 - 2000;
+			object.position.z = Math.random() * 4000 - 2000;
+			scene.add(object);
+
+			objects.push(object);
+
+			var index = 1;
+			object = new THREE.Object3D();
+
+			if(i % 4 == 0) {
+				index = 1;
+			}
+
+			object.position.x = ( ( i % 5 ) * 400 ) - 2000;
+			object.position.y = ( - ( Math.floor( i / 10 ) % 10 ) * 400 ) + 800;
+
+			targets.table.push( object );
+		}
+	};
+
+	function createFile(id, name, type) {
+		return file = {
+			id: id,
+			name: name,
+			type: type
+		};
+	}
+
 	function init() {
-			camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
+		scene = new THREE.Scene();
+
+		camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
+		camera.position.z = 3000;
+
+		for(var i = 0; i < 50; i++) {
+			table.push(createFile(i, 'PNG', 'OPEN'));
+			table.push(createFile(i, 'JPG', 'OPEN'));
+			table.push(createFile(i, 'DOC', 'OPEN'));
+			table.push(createFile(i, 'MP3', 'OPEN'));
+			table.push(createFile(i, 'MP4', 'OPEN'));
+		}
+
+		var fileNode = new FileNode();
+		fileNode.initialize(table);
+
+		renderer = new THREE.CSS3DRenderer();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.domElement.style.position = 'absolute';
+		document.getElementById( 'container' ).appendChild( renderer.domElement );
+
+		controls = new THREE.OrbitControls(camera, renderer.domElement );
+		controls.rotateSpeed = 0.5;
+		controls.minDistance = 500;
+		controls.maxDistance = 6000;
+		controls.addEventListener( 'change', render );
+
+		transform( targets.table, 2000 );
+		window.addEventListener( 'resize', onWindowResize, false );
+	}
+
+	function transform( targets, duration ) {
+
+		TWEEN.removeAll();
+
+		for ( var i = 0; i < objects.length; i ++ ) {
+
+			var object = objects[ i ];
+			var target = targets[ i ];
+
+			new TWEEN.Tween( object.position )
+							.to( { x: target.position.x, y: target.position.y, z: target.position.z }, Math.random() * duration + duration )
+							.easing( TWEEN.Easing.Exponential.InOut )
+							.start();
+
+			new TWEEN.Tween( object.rotation )
+							.to( { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration )
+							.easing( TWEEN.Easing.Exponential.InOut )
+							.start();
+
+		}
+
+		new TWEEN.Tween( this )
+						.to( {}, duration * 2 )
+						.onUpdate( render )
+						.start();
+
+	}
+
+	function onWindowResize() {
+
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize( window.innerWidth, window.innerHeight );
+
+		render();
+
+	}
+
+	function listener() {
+		$('#container').on('click', '.file', function() {
+			alert($(this).children('.name').text());
+		});
+	}
+
+	function animate() {
+		requestAnimationFrame( animate );
+		TWEEN.update();
+		controls.update();
+
+	}
+
+	function render() {
+		renderer.render( scene, camera );
 
 	}
 
