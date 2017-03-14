@@ -135,7 +135,9 @@
 		var index = 0;
 		var contentWrap = document.createElement('div');
 		contentWrap.className = 'content-wrap';
+		contentWrap.innerHTML = '<p style="color: white; font-size: 10em;">hello</p>'
 
+		
 		for(var i = 0; i < table.length; i++) {
 			var fileId = table[i].id;
 			var fileName = table[i].name;
@@ -165,6 +167,7 @@
 			object.position.x = Math.random() * 4000 - 2000;
 			object.position.y = Math.random() * 4000 - 2000;
 			object.position.z = Math.random() * 4000 - 2000;
+
 			scene.add(object);
 
 			objects.push(object);
@@ -193,6 +196,7 @@
 				}
 			}
 		}
+
 	};
 
 	function createFile(id, type, name, time) {
@@ -241,7 +245,7 @@
 		renderer = new THREE.CSS3DRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		renderer.domElement.style.position = 'absolute';
-		document.getElementById( 'container' ).appendChild( renderer.domElement );
+		document.getElementById('container').appendChild( renderer.domElement );
 
 		controls = new THREE.OrbitControls(camera, renderer.domElement );
 		controls.rotateSpeed = 0.5;
@@ -254,8 +258,7 @@
 	}
 
 	function sortDOM() {
-		$('#container').prepend('<div class="rarWrapper"></div>');
-		var rar = $('#container').find('.rar');
+		$('.rar').wrapAll('<div class="rarWrapper"></div>');
 	}
 
 	function transform( targets, duration ) {
@@ -276,7 +279,6 @@
 							.to( { x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration )
 							.easing( TWEEN.Easing.Exponential.InOut )
 							.start();
-
 		}
 
 		new TWEEN.Tween( this )
@@ -294,10 +296,11 @@
 
 		render();
 	}
-
+	
 	function listener() {
 		$('#container').on('click', '.file', function() {
-			alert($(this).children('.name').text());
+			i++;
+			scene.remove(objects[i]);
 		});
 	}
 
