@@ -128,7 +128,8 @@
 		var id = this.id;
 		var name = this.name;
 		var type = this.type;
-
+		var next = 0;
+		var x = 1800;
 
 		for(var i = 0; i < table.length; i++) {
 			var fileId = table[i].id;
@@ -141,7 +142,7 @@
 
 			id = document.createElement('div');
 			id.className = 'id';
-			id.textContent = (fileId);
+			id.textContent = (i+1);
 			file.appendChild(id);
 
 			name = document.createElement('div');
@@ -162,17 +163,21 @@
 
 			objects.push(object);
 
-			var index = 1;
 			object = new THREE.Object3D();
 
-			if(i % 4 == 0) {
-				index = 1;
-			}
-
-			object.position.x = ( ( i % 5 ) * 400 ) - 2000;
-			object.position.y = ( - ( Math.floor( i / 10 ) % 10 ) * 400 ) + 800;
-
+			// i % x has to be the same as i / y
+			// z axis i/z = x*y
+			object.position.x = ( ( i % 4 ) * 350 ) - x;
+			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 200 ) + 800;
+//			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
 			targets.table.push( object );
+
+			next++;
+
+			if(next % 32 == 0) {
+				// offset
+				x -= 1600;
+			}
 		}
 	};
 
@@ -190,12 +195,13 @@
 		camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
 		camera.position.z = 3000;
 
-		for(var i = 0; i < 50; i++) {
-			table.push(createFile(i, 'PNG', 'OPEN'));
-			table.push(createFile(i, 'JPG', 'OPEN'));
-			table.push(createFile(i, 'DOC', 'OPEN'));
-			table.push(createFile(i, 'MP3', 'OPEN'));
-			table.push(createFile(i, 'MP4', 'OPEN'));
+		for(var i = 0; i < 10; i++) {
+			table.push(createFile(0, 'PNG', 'OPEN'));
+			table.push(createFile(0, 'JPG', 'OPEN'));
+			table.push(createFile(0, 'MP3', 'OPEN'));
+			table.push(createFile(0, 'MP4', 'OPEN'));
+			table.push(createFile(0, 'DOC', 'OPEN'));
+
 		}
 
 		var fileNode = new FileNode();
