@@ -35,7 +35,7 @@
 
 	.file {
 		width: 300px;
-		height: 160px;
+		height: 180px;
 		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
 		border: 1px solid rgba(127,255,255,0.25);
 		text-align: center;
@@ -55,7 +55,7 @@
 		color: rgba(127,255,255,0.75);
 	}
 
-	.file .name {
+	.file .type {
 		position: absolute;
 		top: 40px;
 		left: 0px;
@@ -66,7 +66,7 @@
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
 	}
 
-	.file .type {
+	.file .name {
 		position: absolute;
 		bottom: 15px;
 		left: 0px;
@@ -114,8 +114,10 @@
 		init();
 		animate();
 		listener();
+		sortDOM();
 	});
 
+	// DOM file class
 	function FileNode() {
 		this.file;
 		this.id;
@@ -128,32 +130,36 @@
 		var id = this.id;
 		var name = this.name;
 		var type = this.type;
-		var next = 0;
+
 		var x = 1800;
+		var index = 0;
+		var contentWrap = document.createElement('div');
+		contentWrap.className = 'content-wrap';
 
 		for(var i = 0; i < table.length; i++) {
 			var fileId = table[i].id;
 			var fileName = table[i].name;
 			var fileType = table[i].type;
+			var fileTimestamp = table[i].timestamp;
 
 			file = document.createElement('div');
-			file.className = 'file';
+			file.className = 'file ' + fileType.toLowerCase();
 			file.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 
 			id = document.createElement('div');
 			id.className = 'id';
-			id.textContent = (i+1);
+			id.textContent = (fileId);
 			file.appendChild(id);
-
-			name = document.createElement('div');
-			name.className = 'name';
-			name.textContent = fileName;
-			file.appendChild(name);
 
 			type = document.createElement('div');
 			type.className = 'type';
 			type.textContent = fileType;
 			file.appendChild(type);
+
+			name = document.createElement('div');
+			name.className = 'name';
+			name.innerHTML = fileName + '<br>' + fileTimestamp;
+			file.appendChild(name);
 
 			var object = new THREE.CSS3DObject(file);
 			object.position.x = Math.random() * 4000 - 2000;
@@ -163,30 +169,44 @@
 
 			objects.push(object);
 
-			object = new THREE.Object3D();
+			/**
+			 * Arrange Object
+		   * i % x has to be the same as i / y
+			 * z axis i/z = x*y
+			 */
 
-			// i % x has to be the same as i / y
-			// z axis i/z = x*y
+			object = new THREE.Object3D();
 			object.position.x = ( ( i % 4 ) * 350 ) - x;
-			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 200 ) + 800;
+			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 800;
 //			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
 			targets.table.push( object );
 
-			next++;
-
-			if(next % 32 == 0) {
-				// offset
-				x -= 1600;
+			// Sorts the Files into sections. Array has to be sorted by type first.
+			if(typeof table[i+1] !== 'undefined') {
+				if (table[i + 1].type !== fileType) {
+					// offset
+					x -= 1600;
+					index = 0;
+				}
+				else {
+					index++;
+				}
 			}
 		}
 	};
 
-	function createFile(id, name, type) {
+	function createFile(id, type, name, time) {
 		return file = {
 			id: id,
+			type: type,
 			name: name,
-			type: type
+			timestamp: getTime()
 		};
+	}
+
+	function getTime() {
+		var dt = new Date();
+		return dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds();
 	}
 
 	function init() {
@@ -195,16 +215,27 @@
 		camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
 		camera.position.z = 3000;
 
+		// RAR
 		for(var i = 0; i < 10; i++) {
-			table.push(createFile(0, 'PNG', 'OPEN'));
-			table.push(createFile(0, 'JPG', 'OPEN'));
-			table.push(createFile(0, 'MP3', 'OPEN'));
-			table.push(createFile(0, 'MP4', 'OPEN'));
-			table.push(createFile(0, 'DOC', 'OPEN'));
-
+			table.push(createFile(i+1, 'RAR', 'TestingZipFile'));
 		}
 
-		var fileNode = new FileNode();
+		// PNG
+		for(var i = 0; i < 10; i++) {
+			table.push(createFile(i+1, 'PNG', 'Family Photo'));
+		}
+
+		// PTTX
+		for(var i = 0; i < 10; i++) {
+			table.push(createFile(i+1, 'PPTX', 'Proposal Presentation'));
+		}
+
+		// Doc
+		for(var i = 0; i < 10; i++) {
+			table.push(createFile(i+1, 'DOC', 'Executive Summary'));
+		}
+
+ 		var fileNode = new FileNode();
 		fileNode.initialize(table);
 
 		renderer = new THREE.CSS3DRenderer();
@@ -220,6 +251,11 @@
 
 		transform( targets.table, 2000 );
 		window.addEventListener( 'resize', onWindowResize, false );
+	}
+
+	function sortDOM() {
+		$('#container').prepend('<div class="rarWrapper"></div>');
+		var rar = $('#container').find('.rar');
 	}
 
 	function transform( targets, duration ) {
@@ -251,14 +287,12 @@
 	}
 
 	function onWindowResize() {
-
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
 
 		renderer.setSize( window.innerWidth, window.innerHeight );
 
 		render();
-
 	}
 
 	function listener() {
