@@ -33,6 +33,13 @@
 		text-align: center;
 	}
 
+	.file-wrapper {
+		width: 1200px;
+		height: 720px;
+		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
+		border: 1px solid rgba(127,255,255,0.25);
+	}
+
 	.file {
 		width: 300px;
 		height: 180px;
@@ -75,16 +82,6 @@
 		color: rgba(127,255,255,0.75);
 	}
 
-	.title {
-		font-size: 5em;
-		color: white;
-	}
-
-	.encrypt {
-		font-size: 100px;
-		color: white;
-	}
-
 	button {
 		color: rgba(127,255,255,0.75);
 		background: transparent;
@@ -101,15 +98,15 @@
 		background-color: rgba(0,255,255,0.75);
 	}
 </style>
-<div id="menu">
-	<button id="table">TABLE</button>
-	<button id="sphere">SPHERE</button>
-	<button id="helix">HELIX</button>
-	<button id="grid">GRID</button>
-</div><div id="container">
+<div id="container">
 
 </div>
-
+<div id="menu">
+	<!--<button id="table">TABLE</button>-->
+	<!--<button id="sphere">SPHERE</button>-->
+	<!--<button id="helix">HELIX</button>-->
+	<!--<button id="grid">GRID</button>-->
+</div>
 <script src="/js/vendor/CSS3DRenderer.js"></script>
 <script src="/js/vendor/tween.min.js"></script>
 <script>
@@ -141,14 +138,10 @@
 		var name = this.name;
 		var type = this.type;
 
-		var x = 1800;
+		var x = 1000;
 		var index = 0;
-		var contentWrap = document.createElement('div');
-		contentWrap.className = 'content-wrap';
-		contentWrap.innerHTML = '<p style="color: white; font-size: 10em;">hello</p>'
 
-		
-		for(var i = 0; i < table.length; i++) {
+		for(var i = 0; i < 5; i++) {
 			var fileId = table[i].id;
 			var fileName = table[i].name;
 			var fileType = table[i].type;
@@ -165,17 +158,20 @@
 
 			type = document.createElement('div');
 			type.className = 'type';
-			type.innerHTML = fileType;
+			type.textContent = fileType;
 			file.appendChild(type);
 
 			name = document.createElement('div');
 			name.className = 'name';
-			name.innerHTML = 'X: '+( ( ( i % 4 ) * 350 ) - x) + '<br>' + 'Y: ' +( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 800;
+			name.innerHTML = fileName + '<br>' + fileTimestamp;
 			file.appendChild(name);
 
-			console.log('File Type: ' + fileType + '\n FileID: ' + fileId + '\n Index: ' + i + '\nX offset: ' + x);
+			var contentWrap = document.createElement('div');
+			contentWrap.className = 'file-wrapper';
+			contentWrap.appendChild(file);
+//			contentWrap.innerHTML = '<p style="color: white; font-size: 10em;">hello</p>'
 
-			var object = new THREE.CSS3DObject(file);
+			var object = new THREE.CSS3DObject(contentWrap);
 			object.position.x = Math.random() * 4000 - 2000;
 			object.position.y = Math.random() * 4000 - 2000;
 			object.position.z = Math.random() * 4000 - 2000;
@@ -186,28 +182,20 @@
 
 			/**
 			 * Arrange Object
-		   * i % x has to be the same as i / y
+			 * i % x has to be the same as i / y
 			 * z axis i/z = x*y
 			 */
 
 			object = new THREE.Object3D();
 			object.position.x = ( ( i % 4 ) * 350 ) - x;
-			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 800;
+			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 200;
 //			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
 			targets.table.push( object );
 
+			x -= 1000;
 			// Sorts the Files into sections. Array has to be sorted by type first.
 			if(typeof table[i+1] !== 'undefined') {
 				if (table[i + 1].type !== fileType) {
-//					var title = document.createElement('p');
-//					title.className = 'title';
-//					title.textContent = fileType;
-//
-//					var titleObj = new THREE.CSS3DObject(title);
-//					titleObj.position.x = ( ( i % 4 ) * 350 ) - (x + 300);
-//					titleObj.position.y = ( - ( Math.floor( 0 / 4 ) % 8 ) * 200 ) + 900;
-//
-//					scene.add(titleObj);
 					// offset
 					x -= 1600;
 					index = 0;
@@ -224,8 +212,7 @@
 			id: id,
 			type: type,
 			name: name,
-			timestamp: getTime(),
-			index: ""
+			timestamp: getTime()
 		};
 	}
 
@@ -260,7 +247,7 @@
 			table.push(createFile(i+1, 'DOC', 'Executive Summary'));
 		}
 
- 		var fileNode = new FileNode();
+		var fileNode = new FileNode();
 		fileNode.initialize(table);
 
 		renderer = new THREE.CSS3DRenderer();
@@ -279,7 +266,7 @@
 	}
 
 	function sortDOM() {
-//		$('.rar').wrapAll('<div class="rarWrapper"></div>');
+		$('.rar').wrapAll('<div class="rarWrapper"></div>');
 	}
 
 	function transform( targets, duration ) {
@@ -319,26 +306,16 @@
 	}
 
 	var i =0;
-	var big = document.createElement('p');
 
 	function listener() {
 		$('#container').on('click', '.file', function() {
-			console.log()
-
-			big.className = 'encrypt';
-			big.textContent = ('ENCRYPT');
-
-			var object = new THREE.CSS3DObject(big);
-			object.position.x = x;
-			object.position.y = y;
-			scene.add(object);
-
-//			scene.remove(objects[i]);
+			i++;
+			scene.remove(objects[i]);
 		});
 	}
 
 	function animate() {
-		requestAnimationFrame(animate);
+		requestAnimationFrame( animate );
 		TWEEN.update();
 		controls.update();
 

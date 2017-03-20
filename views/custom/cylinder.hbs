@@ -123,8 +123,6 @@
 	$(function() {
 		init();
 		animate();
-		listener();
-		sortDOM();
 	});
 
 	// DOM file class
@@ -233,6 +231,8 @@
 		var dt = new Date();
 		return dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds();
 	}
+	var camera, scene, renderer;
+	var controls;
 
 	function init() {
 		scene = new THREE.Scene();
@@ -240,42 +240,58 @@
 		camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
 		camera.position.z = 3000;
 
-		// RAR
-		for(var i = 0; i < 10; i++) {
-			table.push(createFile(i+1, 'RAR', 'TestingZipFile'));
-		}
-
-		// PNG
-		for(var i = 0; i < 10; i++) {
-			table.push(createFile(i+1, 'PNG', 'Family Photo'));
-		}
-
-		// PTTX
-		for(var i = 0; i < 10; i++) {
-			table.push(createFile(i+1, 'PPTX', 'Proposal Presentation'));
-		}
-
-		// Doc
-		for(var i = 0; i < 10; i++) {
-			table.push(createFile(i+1, 'DOC', 'Executive Summary'));
-		}
-
- 		var fileNode = new FileNode();
-		fileNode.initialize(table);
-
 		renderer = new THREE.CSS3DRenderer();
 		renderer.setSize( window.innerWidth, window.innerHeight );
 		renderer.domElement.style.position = 'absolute';
 		document.getElementById('container').appendChild( renderer.domElement );
 
 		controls = new THREE.OrbitControls(camera, renderer.domElement );
-		controls.rotateSpeed = 0.5;
-		controls.minDistance = 500;
-		controls.maxDistance = 6000;
-		controls.addEventListener( 'change', render );
 
-		transform( targets.table, 2000 );
-		window.addEventListener( 'resize', onWindowResize, false );
+		//create the div that will ultimately be put into 3D vis CSS3
+		var element = document.createElement('div');
+		//...details left out on adding the name and lifespan info
+
+		var eInfo = {width:200, height:50, scaleX:0.25, scaleY: 0.25,z:1};
+
+		element.style.width = eInfo.width + 'px';
+		element.style.height = eInfo.height + 'px';
+		element.style.opacity = 1;
+		element.style.top = '0';
+		element.className += ' css3d-name-div';
+		//"node" contains info on the person;
+		//   node color is based on gender
+		element.style.border = '3px solid ' + '#ffffff';
+
+		//create the CSS3D Object
+		var objectCSS = new THREE.CSS3DObject( element );
+		//place it where the original node was (//flip the y here)
+		objectCSS.position.set(1000,1000,eInfo.z);
+		objectCSS.scale.set(eInfo.scaleX,eInfo.scaleY,1);
+
+		//separate scene is used for the CSS3D objects
+		scene.add(objectCSS);
+
+		//create the webgl plane that has the same size, scaling, position, and
+		//  rotation of the corresponding CSS3D object
+		var geometry = new THREE.PlaneGeometry(eInfo.width, eInfo.height);
+		//material with special properties for this!
+		var material = new THREE.MeshBasicMaterial({
+			blending: THREE.NoBlending,
+			transparent: true,
+			opacity:0.0,
+			side: THREE.DoubleSide,
+			color: 0x000000} );
+		var plane = new THREE.Mesh( geometry, material );
+
+		plane.scale.copy(objectCSS.scale);
+		plane.position.copy(objectCSS.position);
+		// do this in general so that the plane is oriented the
+		//    same as the CSS3DObject:
+		plane.rotation.copy(objectCSS.rotation);
+
+		//separate scene is used for the webgl objects
+		scene.add(plane);
+		render();
 	}
 
 	function sortDOM() {
@@ -318,24 +334,6 @@
 		render();
 	}
 
-	var i =0;
-	var big = document.createElement('p');
-
-	function listener() {
-		$('#container').on('click', '.file', function() {
-			console.log()
-
-			big.className = 'encrypt';
-			big.textContent = ('ENCRYPT');
-
-			var object = new THREE.CSS3DObject(big);
-			object.position.x = x;
-			object.position.y = y;
-			scene.add(object);
-
-//			scene.remove(objects[i]);
-		});
-	}
 
 	function animate() {
 		requestAnimationFrame(animate);
