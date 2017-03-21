@@ -2,6 +2,8 @@
 <div id="container">
 
 </div>
+<script src="/js/vendor/Projector.js"></script>
+<script src="/js/vendor/CanvasRenderer.js"></script>
 
 <script>
 	var camera, scene, renderer, controls;
@@ -23,7 +25,7 @@
 		camera = new THREE.PerspectiveCamera(60, width/height, .1, 500);
 		camera.position.z = 10;
 
-		renderer = new THREE.WebGLRenderer({antialias:true});
+		renderer = new THREE.CanvasRenderer();
 		renderer.setClearColor(0x000000, 0.1);
 		renderer.setSize(width, height);
 
@@ -89,7 +91,8 @@
 
 		geometry = new THREE.Geometry();
 		material = new THREE.LineBasicMaterial({
-			color: colors[0]
+			color: colors[0],
+			linewidth: 10
 		});
 
 		for(var i = 0; i < objResolution; i++) {
