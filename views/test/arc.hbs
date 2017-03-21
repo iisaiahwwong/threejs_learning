@@ -2,9 +2,6 @@
 <div id="container">
 
 </div>
-<script src="/js/vendor/Projector.js"></script>
-<script src="/js/vendor/CanvasRenderer.js"></script>
-
 <script>
 	var camera, scene, renderer, controls;
 	var mouse, raycaster;
@@ -92,9 +89,10 @@
 		geometry = new THREE.Geometry();
 		material = new THREE.LineBasicMaterial({
 			color: colors[0],
-			linewidth: 10
+			linewidth: 3
 		});
 
+    // Draw Circle
 		for(var i = 0; i < objResolution; i++) {
 			// Convert angle to radians
 			angle = i * Math.PI/180;
