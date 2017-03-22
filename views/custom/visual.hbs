@@ -191,7 +191,7 @@
 		height: 300px;
 		border-radius: 50%;
 		/*box-shadow: 0px 0px 12px rgba(0,255,255,0.5);*/
-		border: 10px solid white;
+		border: 2px solid white;
 		text-align: center;
 		cursor: default;
 	}
@@ -357,21 +357,28 @@
 //			var y = targets.table[i].position.y;
 //			var z = targets.table[i].position.z;
 
-      var x = dir.position.x - (0);
-      var y = dir.position.y - (300);
-      var z = dir.position.z;
-
-			geometry.vertices.push(new THREE.Vector3(x, y ,z));
-
+			// Start point r * cos angle
 			var x = dir.position.x + (150 * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (150 * Math.sin(angle * Math.PI/180));
 			var z = dir.position.z;
 
-      angle += 20;
+			geometry.vertices.push(new THREE.Vector3(x, y ,z));
+
+
+			// End point
+			var x = dir.position.x + (300 * Math.cos(angle * Math.PI/180));
+			var y = dir.position.y + (300 * Math.sin(angle * Math.PI/180));
+      var z = dir.position.z;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
-			var material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+			var color = '#ffffff';
+//			if(angle == 0) {
+//				color = '#7FFFFF';
+//			}
+			angle += 20;
+
+			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 1 } );
 			var line = new THREE.Line(geometry, material);
 			sceneGL.add(line);
 		}
