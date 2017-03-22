@@ -147,21 +147,11 @@
 			object.position.x = ( ( i % 4 ) * 350 ) - x;
 			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 800;
 //			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
-			targets.table.push( object );
+			targets.table.push(object);
 
 			// Sorts the Files into sections. Array has to be sorted by type first.
 			if(typeof table[i+1] !== 'undefined') {
 				if (table[i + 1].type !== fileType) {
-//					var title = document.createElement('p');
-//					title.className = 'title';
-//					title.textContent = fileType;
-//
-//					var titleObj = new THREE.CSS3DObject(title);
-//					titleObj.position.x = ( ( i % 4 ) * 350 ) - (x + 300);
-//					titleObj.position.y = ( - ( Math.floor( 0 / 4 ) % 8 ) * 200 ) + 900;
-//
-//					scene.add(titleObj);
-					// offset
 					x -= 1600;
 					index = 0;
 				}

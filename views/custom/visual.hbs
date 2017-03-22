@@ -228,6 +228,48 @@
 		font-size: 20px;
 		color: rgba(127,255,255,0.75);
 	}
+
+	.file {
+		width: 120px;
+		height: 160px;
+		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
+		border: 1px solid rgba(127,255,255,0.25);
+		text-align: center;
+		cursor: default;
+	}
+
+	.file:hover {
+		box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
+		border: 1px solid rgba(127,255,255,0.75);
+	}
+
+	.file .id {
+		position: absolute;
+		top: 20px;
+		right: 20px;
+		font-size: 30px;
+		color: rgba(127,255,255,0.75);
+	}
+
+	.file .type {
+		position: absolute;
+		top: 40px;
+		left: 0px;
+		right: 0px;
+		font-size: 60px;
+		font-weight: bold;
+		color: rgba(255,255,255,0.75);
+		text-shadow: 0 0 10px rgba(0,255,255,0.95);
+	}
+
+	.file .name {
+		position: absolute;
+		bottom: 15px;
+		left: 0px;
+		right: 0px;
+		font-size: 10px;
+		color: rgba(127,255,255,0.75);
+	}
 </style>
 <div id="container">
 
@@ -241,25 +283,25 @@
 
 	var camera, sceneGL, rendererGL, sceneCss, rendererCss, div, controls;
 
-	var objects = [];
+	var dirObjects = [];
+	var fileObjects = [];
 	var table = [];
 	var dirTable = [];
-	var targets = { table: [], sphere: [], helix: [], grid: [] };
+	var targets = { table: [], dir: [], helix: [], grid: [] };
 
 	function init() {
 		// Doc
-		for(var i = 0; i < 10; i++) {
-			dirTable.push(createDir(i+1), 'Desktop', '');
-			if(i > 10) {
-				break;
-			}
+		for(var i = 0; i < 1; i++) {
+			dirTable.push(createDir(i, 'Desktop', '' ));
 		}
 
-		console.log(dirTable.length);
+		for(var i = 0; i < 10; i++) {
+			table.push(createFile(i, 'Doc', '' ));
+		}
 
 		//camera
 		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
-		camera.position.set(0, 0, -1000);
+		camera.position.set(0, 0, 3000);
 
 		//WebGL Renderer
 		rendererGL = new THREE.WebGLRenderer({ antialias: true });
@@ -290,12 +332,42 @@
 		var dir = new DirNode();
 		dir.initialize(dirTable);
 
-		transform(targets.table, 2000);
+		var fileNode = new FileNode();
+		fileNode.initialize(table);
+
+		transform(targets.dir, dirObjects,2000);
+		transform(targets.table, fileObjects,2000);
+		connectLines();
 
 		window.addEventListener( 'resize', onWindowResize, false );
 	}
 
-	function transform( targets, duration ) {
+	function connectLines() {
+		var dir = dirObjects[0];
+		var xV = 150, yV = 150;
+
+		for(var i = 0; i < targets.table.length; i++) {
+			var geometry = new THREE.Geometry();
+
+			var x = targets.table[i].position.x;
+			var y = targets.table[i].position.y;
+			var z = targets.table[i].position.z;
+
+			geometry.vertices.push(new THREE.Vector3(x, y ,z));
+
+			var x = dir.position.x - xV;
+			var y = dir.position.y;
+			var z = dir.position.z;
+
+			geometry.vertices.push(new THREE.Vector3(x, y ,z));
+
+			var material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+			var line = new THREE.Line(geometry, material);
+			sceneGL.add(line);
+		}
+	}
+
+	function transform( targets, objects, duration ) {
 		TWEEN.removeAll();
 
 		for ( var i = 0; i < objects.length; i ++ ) {
@@ -389,18 +461,18 @@
 			dir.appendChild(name);
 
 			var object = new THREE.CSS3DObject(dir);
-			object.position.x = -5;
+			object.position.x = 100;
 			object.position.y = 100;
 			object.position.z = 100;
 
 			sceneCss.add(object);
-			objects.push(object);
+			dirObjects.push(object);
 
 			var object = new THREE.Object3D();
-			object.position.x = ( ( i % 4 ) * 350 ) -0;
+			object.position.x = ( ( i % 4 ) * 350 ) - 400;
 			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 400 ) + 800;
-			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
-			targets.table.push(object);
+			object.position.z = ( Math.floor( i / 32 ) ) * 10;
+			targets.dir.push(object);
 
 		}
 	};
@@ -425,10 +497,9 @@
 			var fileId = table[i].id;
 			var fileName = table[i].name;
 			var fileType = table[i].type;
-			var fileTimestamp = table[i].timestamp;
 
 			file = document.createElement('div');
-			file.className = 'dir ' + fileType.toLowerCase();
+			file.className = 'file ' + fileType.toLowerCase();
 //			file.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 
 			id = document.createElement('div');
@@ -449,13 +520,13 @@
 //			console.log('File Type: ' + fileType + '\n FileID: ' + fileId + '\n Index: ' + i + '\nX offset: ' + x);
 
 			var object = new THREE.CSS3DObject(file);
-			object.position.x = -5;
+			object.position.x = 100;
 			object.position.y = 100;
 			object.position.z = 100;
 
 			sceneCss.add(object);
 
-			objects.push(object);
+			fileObjects.push(object);
 
 			/**
 			 * Arrange Object
@@ -464,22 +535,11 @@
 			 */
 
 			var object = new THREE.Object3D();
-			object.position.x = ( ( i % 4 ) * 350 ) - x;
-			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 400 ) + 800;
+			object.position.x = ( ( i % 4 ) * 350 ) - 400;
+			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 400 ) + 800;
+			object.position.z = ( Math.floor( i / 32 ) ) * 10;
 //			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
 			targets.table.push(object);
-
-			// Sorts the Files into sections. Array has to be sorted by type first.
-			if(typeof table[i+1] !== 'undefined') {
-				if(table[i + 1].type !== fileType) {
-					// offset
-					x -= 1600;
-					index = 0;
-				}
-				else {
-					index++;
-				}
-			}
 		}
 	};
 </script>
