@@ -304,7 +304,7 @@
 		camera.position.set(0, 0, 3000);
 
 		//WebGL Renderer
-		rendererGL = new THREE.WebGLRenderer({ antialias: true });
+		rendererGL = new THREE.CanvasRenderer({ antialias: true });
 		rendererGL.setSize(window.innerWidth, window.innerHeight);
 		rendererGL.domElement.style.zIndex = 5;
 		document.getElementById('container').appendChild(rendererGL.domElement);
@@ -332,11 +332,11 @@
 		var dir = new DirNode();
 		dir.initialize(dirTable);
 
-		var fileNode = new FileNode();
-		fileNode.initialize(table);
+//		var fileNode = new FileNode();
+//		fileNode.initialize(table);
 
-		transform(targets.dir, dirObjects,2000);
-		transform(targets.table, fileObjects,2000);
+//		transform(targets.dir, dirObjects, 2000);
+//		transform(targets.table, fileObjects,2000);
 		connectLines();
 
 		window.addEventListener( 'resize', onWindowResize, false );
@@ -344,21 +344,30 @@
 
 	function connectLines() {
 		var dir = dirObjects[0];
-		var xV = 150, yV = 150;
+    var angle = 180;
 
-		for(var i = 0; i < targets.table.length; i++) {
+		for(var i = 0; i < 10; i++) {
 			var geometry = new THREE.Geometry();
 
-			var x = targets.table[i].position.x;
-			var y = targets.table[i].position.y;
-			var z = targets.table[i].position.z;
+//      fileObjects[i].position.x = dir.position.x + (300 * Math.cos(angle));
+//      fileObjects[i].position.y = dir.position.y + (300 * Math.cos(angle));
+
+
+//			var x = targets.table[i].position.x;
+//			var y = targets.table[i].position.y;
+//			var z = targets.table[i].position.z;
+
+      var x = dir.position.x - (0);
+      var y = dir.position.y - (300);
+      var z = dir.position.z;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
-			var x = dir.position.x;
-			var y = dir.position.y - 160;
-			console.log(dir.position.y);
+			var x = dir.position.x + (150 * Math.cos(angle * Math.PI/180));
+			var y = dir.position.y + (150 * Math.sin(angle * Math.PI/180));
 			var z = dir.position.z;
+
+      angle += 20;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
