@@ -186,6 +186,10 @@
 <script src="/js/vendor/tween.min.js"></script>
 <script src="/js/vendor/CSS3DRenderer.js"></script>
 <style>
+	@import url('https://fonts.googleapis.com/css?family=Roboto:100,300,400');
+	* {
+		font-family: 'Roboto';
+	}
 	.dir {
 		width: 300px;
 		height: 300px;
@@ -215,7 +219,7 @@
 		left: 0px;
 		right: 0px;
 		font-size: 60px;
-		font-weight: bold;
+		font-weight: 100;
 		color: rgba(255,255,255,0.75);
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
 	}
@@ -288,7 +292,8 @@
 	var fileObjects = [];
 	var table = [];
 	var dirTable = [];
-	var targets = { table: [], dir: [], helix: [], grid: [] };
+	var lineTable = [];
+	var targets = { table: [], dir: [], line: [], grid: [] };
 
 	function init() {
 		// Doc
@@ -357,13 +362,16 @@
 			var z = dir.position.z;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
+			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
 			// End point r*2 * cos(angle)
 			var x = dir.position.x + (300 * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (300 * Math.sin(angle * Math.PI/180));
       var z = dir.position.z;
 
-      var targetObj = new THREE.Object3D();
+      targets.line.push(new THREE.Vector3(x, y ,z));
+
+			var targetObj = new THREE.Object3D();
       targetObj.position.x = x;
       targetObj.position.y = y;
       targetObj.position.z = z;
@@ -374,17 +382,35 @@
 //			fileObjects[i].position.y = y;
 //			fileObjects[i].position.z = z;
 
-			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
 			var color = '#ffffff';
 //			if(angle == 0) {
 //				color = '#7FFFFF';
 //			}
-			angle += 20;
+			// Change angle to vary the position
+			angle += 5;
 
-			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 1 } );
+			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 0.2 } );
 			var line = new THREE.Line(geometry, material);
+
+			lineTable.push(line);
+
+//			console.log(line);
+
 			sceneGL.add(line);
+		}
+		transformLine(targets.line, lineTable, 1000);
+	}
+
+	function transformLine(targets, objects, duration) {
+		for(var i = 0; i < objects.length; i++) {
+			var object = objects[i];
+			var target = targets[i];
+
+			new TWEEN.Tween( object.geometry.vertices[1] )
+							.to( { x: target.x, y: target.y, z: target.z }, Math.random() * duration + duration )
+							.easing( TWEEN.Easing.Exponential.InOut )
+							.start();
 		}
 	}
 
