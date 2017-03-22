@@ -1,38 +1,4 @@
 <style>
-	html, body {
-		height: 100%;
-	}
-
-	body {
-		background-color: #000000;
-		margin: 0;
-		font-family: Helvetica, sans-serif;;
-		overflow: hidden;
-	}
-
-	a {
-		color: #ffffff;
-	}
-
-	#info {
-		position: absolute;
-		width: 100%;
-		color: #ffffff;
-		padding: 5px;
-		font-family: Monospace;
-		font-size: 13px;
-		font-weight: bold;
-		text-align: center;
-		z-index: 1;
-	}
-
-	#menu {
-		position: absolute;
-		bottom: 20px;
-		width: 100%;
-		text-align: center;
-	}
-
 	.file {
 		width: 300px;
 		height: 300px;
@@ -102,31 +68,17 @@
 		background-color: rgba(0,255,255,0.75);
 	}
 </style>
-<div id="menu">
-	<button id="table">TABLE</button>
-	<button id="sphere">SPHERE</button>
-	<button id="helix">HELIX</button>
-	<button id="grid">GRID</button>
-</div><div id="container">
-
-</div>
-
 <script src="/js/vendor/CSS3DRenderer.js"></script>
 <script src="/js/vendor/tween.min.js"></script>
+
+<script src="/js/vendor/Projector.js"></script>
+<script src="/js/vendor/CanvasRenderer.js"></script>
 <script>
-	var camera, scene, renderer;
-	var controls;
+	var camera, light, scene, renderer, rectangle, scene2, renderer2, div, controls;
 
 	var table = [];
 	var objects = [];
 	var targets = { table: [], sphere: [], helix: [], grid: [] };
-
-	$(function() {
-		init();
-		animate();
-		listener();
-		sortDOM();
-	});
 
 	// DOM file class
 	function FileNode() {
@@ -148,7 +100,7 @@
 		contentWrap.className = 'content-wrap';
 		contentWrap.innerHTML = '<p style="color: white; font-size: 10em;">hello</p>'
 
-		
+
 		for(var i = 0; i < table.length; i++) {
 			var fileId = table[i].id;
 			var fileName = table[i].name;
@@ -181,13 +133,13 @@
 			object.position.y = Math.random() * 4000 - 2000;
 			object.position.z = Math.random() * 4000 - 2000;
 
-			scene.add(object);
+			scene2.add(object);
 
 			objects.push(object);
 
 			/**
 			 * Arrange Object
-		   * i % x has to be the same as i / y
+			 * i % x has to be the same as i / y
 			 * z axis i/z = x*y
 			 */
 
@@ -218,6 +170,27 @@
 				}
 			}
 		}
+
+		var geometry = new THREE.Geometry();
+//		for(var i = 0; i < objects.length; i++) {
+//
+//		}
+
+		var x = objects[0].position.x - 150;
+		var y = objects[0].position.y;
+		var z = objects[0].position.z;
+
+		geometry.vertices.push(new THREE.Vector3(x, y ,z));
+
+		var x = objects[1].position.x - 150;
+		var y = objects[1].position.y;
+		var z = objects[1].position.z;
+
+		geometry.vertices.push(new THREE.Vector3(x, y ,z));
+
+		material = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+		line = new THREE.Line(geometry, material);
+		scene.add(line);
 	};
 
 	function createFile(id, type, name, time) {
@@ -235,12 +208,28 @@
 		return dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds();
 	}
 
+	init();
+	animate();
+
 	function init() {
+		//camera
+		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+		camera.position.set(0, 0, -1000);
+
+		//Scene
 		scene = new THREE.Scene();
 
-		camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
-		camera.position.z = 3000;
 
+		//WebGL Renderer
+		renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.domElement.style.zIndex = 5;
+		document.body.appendChild(renderer.domElement);
+
+		//CSS3D Scene
+		scene2 = new THREE.Scene();
+
+		//HTML
 		// RAR
 		for(var i = 0; i < 10; i++) {
 			table.push(createFile(i+1, 'RAR', 'TestingZipFile'));
@@ -261,26 +250,36 @@
 			table.push(createFile(i+1, 'DOC', 'Executive Summary'));
 		}
 
- 		var fileNode = new FileNode();
+		var fileNode = new FileNode();
 		fileNode.initialize(table);
 
-		renderer = new THREE.CSS3DRenderer();
-		renderer.setSize( window.innerWidth, window.innerHeight );
-		renderer.domElement.style.position = 'absolute';
-		document.getElementById('container').appendChild( renderer.domElement );
+//		// Custom
+//		var geometry2 = new THREE.Geometry();
+//
+//		geometry2.vertices.push(torus.position);
+//		geometry2.vertices.push(div.position);
+//
+//		console.log(geometry2);
+//
+//		var material2 = new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 2 } );
+//		var line = new THREE.Line(geometry2, material2);
+//		scene.add(line);
 
-		controls = new THREE.OrbitControls(camera, renderer.domElement );
-		controls.rotateSpeed = 0.5;
-		controls.minDistance = 500;
-		controls.maxDistance = 6000;
-		controls.addEventListener( 'change', render );
 
-    transform( targets.table, 2000 );
-		window.addEventListener( 'resize', onWindowResize, false );
-	}
+		//CSS3D Renderer
+		renderer2 = new THREE.CSS3DRenderer();
+		renderer2.setSize(window.innerWidth, window.innerHeight);
+		renderer2.domElement.style.position = 'absolute';
+		renderer2.domElement.style.top = 0;
+		document.body.appendChild(renderer2.domElement);
 
-	function sortDOM() {
-//		$('.rar').wrapAll('<div class="rarWrapper"></div>');
+		//controls
+		controls = new THREE.OrbitControls(camera);
+		controls.rotateSpeed = 1.0;
+		controls.zoomSpeed = 1.2;
+		controls.panSpeed = 0.8;
+
+		transform( targets.table, 2000 );
 	}
 
 	function transform( targets, duration ) {
@@ -310,44 +309,14 @@
 
 	}
 
-	function onWindowResize() {
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-
-		renderer.setSize( window.innerWidth, window.innerHeight );
-
-		render();
-	}
-
-	var i =0;
-	var big = document.createElement('p');
-
-	function listener() {
-		$('#container').on('click', '.file', function() {
-			console.log()
-
-			big.className = 'encrypt';
-			big.textContent = ('ENCRYPT');
-
-			var object = new THREE.CSS3DObject(big);
-			object.position.x = x;
-			object.position.y = y;
-			scene.add(object);
-
-//			scene.remove(objects[i]);
-		});
+	function render() {
+		renderer2.render(scene2, camera);
 	}
 
 	function animate() {
 		requestAnimationFrame(animate);
-		TWEEN.update();
+		renderer2.render(scene2, camera);
+		renderer.render(scene, camera);
 		controls.update();
-
 	}
-
-	function render() {
-		renderer.render( scene, camera );
-
-	}
-
 </script>
