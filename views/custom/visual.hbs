@@ -186,7 +186,7 @@
 <script src="/js/vendor/tween.min.js"></script>
 <script src="/js/vendor/CSS3DRenderer.js"></script>
 <style>
-	.file {
+	.dir {
 		width: 300px;
 		height: 300px;
 		border-radius: 50%;
@@ -196,12 +196,12 @@
 		cursor: default;
 	}
 
-	.file:hover {
+	.dir:hover {
 		box-shadow: 0px 0px 12px rgba(0,255,255,0.75);
 		border: 1px solid rgba(127,255,255,0.75);
 	}
 
-	.file .id {
+	.dir .id {
 		position: absolute;
 		top: 20px;
 		right: 20px;
@@ -209,7 +209,7 @@
 		color: rgba(127,255,255,0.75);
 	}
 
-	.file .type {
+	.dir .type {
 		position: absolute;
 		top: 40px;
 		left: 0px;
@@ -220,7 +220,7 @@
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
 	}
 
-	.file .name {
+	.dir .name {
 		position: absolute;
 		bottom: 15px;
 		left: 0px;
@@ -243,13 +243,19 @@
 
 	var objects = [];
 	var table = [];
+	var dirTable = [];
 	var targets = { table: [], sphere: [], helix: [], grid: [] };
 
 	function init() {
 		// Doc
 		for(var i = 0; i < 10; i++) {
-			table.push(createFile(i+1, 'DOC', 'Executive Summary'));
+			dirTable.push(createDir(i+1), 'Desktop', '');
+			if(i > 10) {
+				break;
+			}
 		}
+
+		console.log(dirTable.length);
 
 		//camera
 		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
@@ -259,7 +265,7 @@
 		rendererGL = new THREE.WebGLRenderer({ antialias: true });
 		rendererGL.setSize(window.innerWidth, window.innerHeight);
 		rendererGL.domElement.style.zIndex = 5;
-		document.body.appendChild(rendererGL.domElement);
+		document.getElementById('container').appendChild(rendererGL.domElement);
 
 		// WebGL renderer
 		sceneGL = new THREE.Scene();
@@ -269,7 +275,7 @@
 		rendererCss.setSize(window.innerWidth, window.innerHeight);
 		rendererCss.domElement.style.position = 'absolute';
 		rendererCss.domElement.style.top = 0;
-		document.body.appendChild(rendererCss.domElement);
+		document.getElementById('container').appendChild(rendererCss.domElement);
 
 		//CSS3D Scene
 		sceneCss = new THREE.Scene();
@@ -280,8 +286,9 @@
 		controls.zoomSpeed = 1.2;
 		controls.panSpeed = 0.8;
 
-		var fileInit = new FileNode();
-		fileInit.initialize(table);
+//		var fileInit = new FileNode();
+		var dir = new DirNode();
+		dir.initialize(dirTable);
 
 		transform(targets.table, 2000);
 
@@ -345,6 +352,59 @@
 		};
 	}
 
+	function createDir(id, type, name) {
+		return dir = {
+			id: id,
+			type: type,
+			name: name
+		}
+	}
+
+	function DirNode() {
+		this.dir;
+		this.name;
+		this.type;
+	}
+
+	DirNode.prototype.initialize = function(dirTable) {
+		var dir = this.dir;
+		var name = this.name;
+		var type = this.type;
+
+		for(var i = 0; i < dirTable.length; i++) {
+			var dirId = dirTable[i].id;
+			var dirName = dirTable[i].name;
+			var dirType = dirTable[i].type;
+
+			dir = document.createElement('div');
+			dir.className = 'dir';
+
+			type = document.createElement('div');
+			type.className = 'type';
+			type.innerHTML = dirType;
+			dir.appendChild(type);
+
+			name = document.createElement('div');
+			name.className = 'name';
+			dir.appendChild(name);
+
+			var object = new THREE.CSS3DObject(dir);
+			object.position.x = -5;
+			object.position.y = 100;
+			object.position.z = 100;
+
+			sceneCss.add(object);
+			objects.push(object);
+
+			var object = new THREE.Object3D();
+			object.position.x = ( ( i % 4 ) * 350 ) -0;
+			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 400 ) + 800;
+			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
+			targets.table.push(object);
+
+		}
+	};
+
 	function FileNode() {
 		this.file;
 		this.id;
@@ -360,10 +420,6 @@
 
 		var x = 1800;
 		var index = 0;
-		var contentWrap = document.createElement('div');
-		contentWrap.className = 'content-wrap';
-		contentWrap.innerHTML = '<p style="color: white; font-size: 10em;">hello</p>'
-
 
 		for(var i = 0; i < table.length; i++) {
 			var fileId = table[i].id;
@@ -372,7 +428,7 @@
 			var fileTimestamp = table[i].timestamp;
 
 			file = document.createElement('div');
-			file.className = 'file ' + fileType.toLowerCase();
+			file.className = 'dir ' + fileType.toLowerCase();
 //			file.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 
 			id = document.createElement('div');
@@ -407,15 +463,15 @@
 			 * z axis i/z = x*y
 			 */
 
-			object = new THREE.Object3D();
+			var object = new THREE.Object3D();
 			object.position.x = ( ( i % 4 ) * 350 ) - x;
-			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 800;
+			object.position.y = ( - ( Math.floor( index / 4 ) % 8 ) * 400 ) + 800;
 //			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
 			targets.table.push(object);
 
 			// Sorts the Files into sections. Array has to be sorted by type first.
 			if(typeof table[i+1] !== 'undefined') {
-				if (table[i + 1].type !== fileType) {
+				if(table[i + 1].type !== fileType) {
 					// offset
 					x -= 1600;
 					index = 0;
