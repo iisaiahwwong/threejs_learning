@@ -230,11 +230,12 @@
 	}
 
 	.file {
-		width: 120px;
-		height: 160px;
-		box-shadow: 0px 0px 12px rgba(0,255,255,0.5);
+		width: 40px;
+		height: 55px;
+		/*box-shadow: 0px 0px 12px rgba(0,255,255,0.5);*/
 		border: 1px solid rgba(127,255,255,0.25);
 		text-align: center;
+		background-color: black;
 		cursor: default;
 	}
 
@@ -253,13 +254,13 @@
 
 	.file .type {
 		position: absolute;
-		top: 40px;
+		top: 0px;
 		left: 0px;
 		right: 0px;
-		font-size: 60px;
+		font-size: 20px;
 		font-weight: bold;
 		color: rgba(255,255,255,0.75);
-		text-shadow: 0 0 10px rgba(0,255,255,0.95);
+		/*text-shadow: 0 0 10px rgba(0,255,255,0.95);*/
 	}
 
 	.file .name {
@@ -332,12 +333,13 @@
 		var dir = new DirNode();
 		dir.initialize(dirTable);
 
-//		var fileNode = new FileNode();
-//		fileNode.initialize(table);
+		var fileNode = new FileNode();
+		fileNode.initialize(table);
 
 //		transform(targets.dir, dirObjects, 2000);
 //		transform(targets.table, fileObjects,2000);
 		connectLines();
+		transform(targets.table, fileObjects,2000);
 
 		window.addEventListener( 'resize', onWindowResize, false );
 	}
@@ -346,29 +348,31 @@
 		var dir = dirObjects[0];
     var angle = 180;
 
-		for(var i = 0; i < 10; i++) {
+		for(var i = 0; i < fileObjects.length; i++) {
 			var geometry = new THREE.Geometry();
 
-//      fileObjects[i].position.x = dir.position.x + (300 * Math.cos(angle));
-//      fileObjects[i].position.y = dir.position.y + (300 * Math.cos(angle));
-
-
-//			var x = targets.table[i].position.x;
-//			var y = targets.table[i].position.y;
-//			var z = targets.table[i].position.z;
-
-			// Start point r * cos angle
+			// Start point r * cos(angle)
 			var x = dir.position.x + (150 * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (150 * Math.sin(angle * Math.PI/180));
 			var z = dir.position.z;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
-
-			// End point
+			// End point r*2 * cos(angle)
 			var x = dir.position.x + (300 * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (300 * Math.sin(angle * Math.PI/180));
       var z = dir.position.z;
+
+      var targetObj = new THREE.Object3D();
+      targetObj.position.x = x;
+      targetObj.position.y = y;
+      targetObj.position.z = z;
+
+			targets.table.push(targetObj);
+
+//			fileObjects[i].position.x = x;
+//			fileObjects[i].position.y = y;
+//			fileObjects[i].position.z = z;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
@@ -385,8 +389,6 @@
 	}
 
 	function transform( targets, objects, duration ) {
-		TWEEN.removeAll();
-
 		for ( var i = 0; i < objects.length; i ++ ) {
 
 			var object = objects[i];
@@ -529,13 +531,6 @@
 			type.innerHTML = fileType;
 			file.appendChild(type);
 
-			name = document.createElement('div');
-			name.className = 'name';
-			name.innerHTML = 'X: '+( ( ( i % 4 ) * 350 ) - x) + '<br>' + 'Y: ' +( - ( Math.floor( index / 4 ) % 8 ) * 200 ) + 800;
-			file.appendChild(name);
-
-//			console.log('File Type: ' + fileType + '\n FileID: ' + fileId + '\n Index: ' + i + '\nX offset: ' + x);
-
 			var object = new THREE.CSS3DObject(file);
 			object.position.x = 100;
 			object.position.y = 100;
@@ -551,12 +546,11 @@
 			 * z axis i/z = x*y
 			 */
 
-			var object = new THREE.Object3D();
-			object.position.x = ( ( i % 4 ) * 350 ) - 400;
-			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 400 ) + 800;
-			object.position.z = ( Math.floor( i / 32 ) ) * 10;
-//			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
-			targets.table.push(object);
+//			var object = new THREE.Object3D();
+//			object.position.x = ( ( i % 4 ) * 350 ) - 400;
+//			object.position.y = ( - ( Math.floor( i / 4 ) % 8 ) * 400 ) + 800;
+//			object.position.z = ( Math.floor( i / 32 ) ) * 10;
+////			object.position.z = ( Math.floor( i / 32 ) ) * 1000 - 2000;
 		}
 	};
 </script>
