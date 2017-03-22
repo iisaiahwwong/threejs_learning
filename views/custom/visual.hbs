@@ -355,8 +355,9 @@
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
-			var x = dir.position.x - xV;
-			var y = dir.position.y;
+			var x = dir.position.x;
+			var y = dir.position.y - 160;
+			console.log(dir.position.y);
 			var z = dir.position.z;
 
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
