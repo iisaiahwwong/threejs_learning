@@ -198,6 +198,18 @@
 		border: 2px solid white;
 		text-align: center;
 		cursor: default;
+		position: relative;
+	}
+
+	.dir .div-inner {
+		border-radius: 50%;
+		width: 280px;
+		height: 280px;
+		border: 1px solid rgba(255, 255, 255, 0.6);
+		position: absolute;
+		margin: -140px 0px 0px -140px;
+		top: 50%;
+		left: 50%;
 	}
 
 	.dir:hover {
@@ -214,10 +226,10 @@
 	}
 
 	.dir .type {
-		position: absolute;
-		top: 40px;
-		left: 0px;
-		right: 0px;
+		height: 280px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		font-size: 60px;
 		font-weight: 100;
 		color: rgba(255,255,255,0.75);
@@ -301,7 +313,8 @@
 			dirTable.push(createDir(i, 'Desktop', '' ));
 		}
 
-		for(var i = 0; i < 10; i++) {
+		for(var i = 0; i < 10
+						; i++) {
 			table.push(createFile(i, 'Doc', '' ));
 		}
 
@@ -388,7 +401,7 @@
 //				color = '#7FFFFF';
 //			}
 			// Change angle to vary the position
-			angle += 5;
+			angle += 10;
 
 			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 0.2 } );
 			var line = new THREE.Line(geometry, material);
@@ -496,10 +509,14 @@
 			dir = document.createElement('div');
 			dir.className = 'dir';
 
+			var divInner = document.createElement('div');
+			divInner.className = 'div-inner';
+			dir.appendChild(divInner);
+
 			type = document.createElement('div');
 			type.className = 'type';
 			type.innerHTML = dirType;
-			dir.appendChild(type);
+			divInner.appendChild(type);
 
 			name = document.createElement('div');
 			name.className = 'name';
@@ -536,7 +553,6 @@
 		var type = this.type;
 
 		var x = 1800;
-		var index = 0;
 
 		for(var i = 0; i < table.length; i++) {
 			var fileId = table[i].id;
