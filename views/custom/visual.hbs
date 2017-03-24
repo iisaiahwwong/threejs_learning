@@ -404,8 +404,10 @@
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
 			// End point r*2 * cos(angle)
-
-			var num =Math.floor(Math.random() * (300 - 200 + 1)) + 200;
+			
+			// Uncomment to do variable length of lines
+			// var num =Math.floor(Math.random() * (300 - 200 + 1)) + 200;
+			var num = 300;
 			var x = dir.position.x + (num * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (num * Math.sin(angle * Math.PI/180));
       var z = dir.position.z;
