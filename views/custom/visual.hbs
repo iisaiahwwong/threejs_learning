@@ -231,9 +231,26 @@
 		align-items: center;
 		justify-content: center;
 		font-size: 60px;
-		font-weight: 100;
 		color: rgba(255,255,255,0.75);
 		text-shadow: 0 0 10px rgba(0,255,255,0.95);
+	}
+
+	.line-outer {
+		width:100%;
+		font-size: 20px;
+		text-align:center;
+		border-bottom: 20px solid rgba(255, 255, 255, 0.7);
+		line-height:0.1em;
+		margin:10px 0 20px;
+	}
+	.line-outer .inner {
+		position: absolute;
+		top: 40%;
+		left: 30%;
+		background:#000;
+		font-weight: 100;
+		padding: 20px 20px;
+		color: white;
 	}
 
 	.dir .name {
@@ -249,7 +266,7 @@
 		width: 40px;
 		height: 55px;
 		/*box-shadow: 0px 0px 12px rgba(0,255,255,0.5);*/
-		border: 1px solid rgba(127,255,255,0.25);
+		border: 1px solid #83F0DC;
 		text-align: center;
 		background-color: black;
 		cursor: default;
@@ -300,6 +317,9 @@
 
 	var camera, sceneGL, rendererGL, sceneCss, rendererCss, div, controls;
 
+	var raycaster;
+	var mouse = new THREE.Vector2();
+
 	var dirObjects = [];
 	var fileObjects = [];
 	var table = [];
@@ -313,14 +333,16 @@
 			dirTable.push(createDir(i, 'Desktop', '' ));
 		}
 
-		for(var i = 0; i < 10
-						; i++) {
+		for(var i = 0; i < 10; i++) {
 			table.push(createFile(i, 'Doc', '' ));
 		}
 
+		// Raycaster
+		raycaster = new THREE.Raycaster();
+
 		//camera
 		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
-		camera.position.set(0, 0, 3000);
+		camera.position.set(0, 0, 2000);
 
 		//WebGL Renderer
 		rendererGL = new THREE.CanvasRenderer({ antialias: true });
@@ -357,33 +379,40 @@
 //		transform(targets.dir, dirObjects, 2000);
 //		transform(targets.table, fileObjects,2000);
 		connectLines();
-		transform(targets.table, fileObjects,2000);
+		transform(targets.table, fileObjects, 2000);
+		transformLine(targets.line, lineTable, 2400);
 
 		window.addEventListener( 'resize', onWindowResize, false );
+		window.addEventListener( 'mousemove', onMouseMove, false );
 	}
 
 	function connectLines() {
 		var dir = dirObjects[0];
     var angle = 180;
 
-		for(var i = 0; i < fileObjects.length; i++) {
+		for(var i = 0; i < 10; i++) {
 			var geometry = new THREE.Geometry();
 
-			// Start point r * cos(angle)
+			// Start point r * cos(angle). I.E: 150 is the width of the css border
 			var x = dir.position.x + (150 * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (150 * Math.sin(angle * Math.PI/180));
 			var z = dir.position.z;
 
+
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
+			// Add the end point to create a line.
 			geometry.vertices.push(new THREE.Vector3(x, y ,z));
 
 			// End point r*2 * cos(angle)
-			var x = dir.position.x + (300 * Math.cos(angle * Math.PI/180));
-			var y = dir.position.y + (300 * Math.sin(angle * Math.PI/180));
+
+			var num =Math.floor(Math.random() * (300 - 200 + 1)) + 200;
+			var x = dir.position.x + (num * Math.cos(angle * Math.PI/180));
+			var y = dir.position.y + (num * Math.sin(angle * Math.PI/180));
       var z = dir.position.z;
 
       targets.line.push(new THREE.Vector3(x, y ,z));
 
+      // Assign the end point values to a target Object
 			var targetObj = new THREE.Object3D();
       targetObj.position.x = x;
       targetObj.position.y = y;
@@ -403,16 +432,54 @@
 			// Change angle to vary the position
 			angle += 10;
 
-			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 0.2 } );
+			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 0.5 } );
 			var line = new THREE.Line(geometry, material);
 
 			lineTable.push(line);
-
-//			console.log(line);
-
+			 +
 			sceneGL.add(line);
 		}
-		transformLine(targets.line, lineTable, 1000);
+
+		new TWEEN.Tween(dir.rotation)
+						.to( {z: "-" + 4 * Math.PI/2}, 3000)
+						.easing( TWEEN.Easing.Exponential.InOut )
+						.start();
+
+
+	}
+
+
+	var mouse = new THREE.Vector2(),
+					INTERSECTED, raycaster;
+
+	function hoverLines() {
+		// find intersections
+		var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
+
+		raycaster.setFromCamera(mouse, camera);
+
+		var intersects = raycaster.intersectObjects(sceneGL.children);
+
+		if (intersects.length > 0) {
+
+			console.log(INTERSECTED != intersects[0].object);
+			if (INTERSECTED != intersects[0].object) {
+
+
+				if (INTERSECTED) INTERSECTED.material.linewidth(INTERSECTED.currentHex);
+
+				INTERSECTED = intersects[0].object;
+				INTERSECTED.currentHex = INTERSECTED.material.linewidth;
+				INTERSECTED.material.linewidth = 1;
+			}
+
+		} else {
+
+			if (INTERSECTED) INTERSECTED.material.linewidth = 0.5;
+
+			INTERSECTED = null;
+
+		}
 	}
 
 	function transformLine(targets, objects, duration) {
@@ -466,9 +533,19 @@
 		rendererGL.render(sceneGL, camera);
 	}
 
+	function onMouseMove(event) {
+
+		event.preventDefault();
+
+		mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+	}
+
 	function animate() {
 		requestAnimationFrame(animate);
 		TWEEN.update();
+		hoverLines();
 		render();
 		controls.update();
 	}
@@ -515,7 +592,7 @@
 
 			type = document.createElement('div');
 			type.className = 'type';
-			type.innerHTML = dirType;
+			type.innerHTML ='<h6 class="line-outer"><span class="inner">'+dirType+'</span></h6>';
 			divInner.appendChild(type);
 
 			name = document.createElement('div');
