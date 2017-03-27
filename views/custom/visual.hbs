@@ -391,28 +391,61 @@
     var angle = 180;
 
 		for(var i = 0; i < 10; i++) {
-			var geometry = new THREE.Geometry();
+//			var geometry = new THREE.Geometry();
 
 			// Start point r * cos(angle). I.E: 150 is the width of the css border
 			var x = dir.position.x + (150 * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (150 * Math.sin(angle * Math.PI/180));
 			var z = dir.position.z;
 
+			// End point r*2 * cos(angle)
+			var num = 300;
+			var ex = dir.position.x + (num * Math.cos(angle * Math.PI/180));
+			var ey = dir.position.y + (num * Math.sin(angle * Math.PI/180));
+			var ez = dir.position.z;
 
-			geometry.vertices.push(new THREE.Vector3(x, y ,z));
-			// Add the end point to create a line.
-			geometry.vertices.push(new THREE.Vector3(x, y ,z));
+//			console.log('x ' + x);
+//			console.log('y ' + y);
+//			console.log('z ' + z);
+//
+//			console.log('ex ' + ex);
+//			console.log('ey ' + ey);
+//			console.log('ez ' + ez);
+
+			// S Curve
+			var curve = new THREE.CubicBezierCurve3(
+							new THREE.Vector3(x, y, z),
+							new THREE.Vector3(x-80 , y-50, z),
+							new THREE.Vector3(x-100, y+50, z),
+							new THREE.Vector3(ex, ey, ez)
+			);
+
+//			var geometry = new THREE.Geometry();
+//			geometry.vertices = curve.getPoints(20);
+
+			targets.line.push(curve);
+
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push(	new THREE.Vector3(x, y, z));
+
+			var color = '#ffffff';
+
+			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 0.5 } );
+			var line = new THREE.Line(geometry, material);
+
+			lineTable.push(line);
+			sceneGL.add(line);
 
 			// End point r*2 * cos(angle)
-
-			var num =Math.floor(Math.random() * (300 - 200 + 1)) + 200;
+//			var num =Math.floor(Math.random() * (300 - 200 + 1)) + 200;
+			var num = 300;
 			var x = dir.position.x + (num * Math.cos(angle * Math.PI/180));
 			var y = dir.position.y + (num * Math.sin(angle * Math.PI/180));
       var z = dir.position.z;
 
-      targets.line.push(new THREE.Vector3(x, y ,z));
+//      targets.line.push(new THREE.Vector3(x, y ,z));
 
-      // Assign the end point values to a target Object
+			// Assign the end point values to a target Object
 			var targetObj = new THREE.Object3D();
       targetObj.position.x = x;
       targetObj.position.y = y;
@@ -420,31 +453,15 @@
 
 			targets.table.push(targetObj);
 
-//			fileObjects[i].position.x = x;
-//			fileObjects[i].position.y = y;
-//			fileObjects[i].position.z = z;
-
-
-			var color = '#ffffff';
-//			if(angle == 0) {
-//				color = '#7FFFFF';
-//			}
 			// Change angle to vary the position
 			angle += 10;
-
-			var material = new THREE.LineBasicMaterial( { color: color, linewidth: 0.5 } );
-			var line = new THREE.Line(geometry, material);
-
-			lineTable.push(line);
-			 +
-			sceneGL.add(line);
 		}
 
+		// Rotate main Circle
 		new TWEEN.Tween(dir.rotation)
 						.to( {z: "-" + 4 * Math.PI/2}, 3000)
 						.easing( TWEEN.Easing.Exponential.InOut )
 						.start();
-
 
 	}
 
@@ -483,15 +500,131 @@
 	}
 
 	function transformLine(targets, objects, duration) {
-		for(var i = 0; i < objects.length; i++) {
-			var object = objects[i];
-			var target = targets[i];
+		var filtered = [];
 
-			new TWEEN.Tween( object.geometry.vertices[1] )
-							.to( { x: target.x, y: target.y, z: target.z }, Math.random() * duration + duration )
-							.easing( TWEEN.Easing.Exponential.InOut )
-							.start();
-		}
+		var c = 0;
+		var j = 0;
+
+		var interval = setInterval(function() {
+			if (c == objects.length) {
+				clearInterval(interval);
+			}
+
+			var curve = targets[c];
+			var object = objects[c];
+
+			var geometry = new THREE.BufferGeometry();
+
+			geometry.vertices = curve.getPoints(1000);
+
+			var tmp = object.geometry.vertices[object.geometry.vertices.length-1];
+
+			var tX = tmp.x;
+			var tY = tmp.y;
+			var tZ = tmp.z;
+
+			var innerInterval = setInterval(function() {
+				if (j == geometry.vertices.length) {
+					clearInterval(innerInterval);
+				}
+
+				object.geometry.vertices.push(new THREE.Vector3(tX, tY, tZ));
+
+				var x = geometry.vertices[j].x;
+				var y = geometry.vertices[j].y;
+				var z = geometry.vertices[j].z;
+
+				var change = object.geometry.vertices[object.geometry.vertices.length-1];
+				change.x = x;
+				change.y = y;
+				change.z = z;
+
+				tX = x;
+				tY = y;
+				tZ = z;
+
+				j++;
+			}, 5);
+
+			objects[c].geometry.verticesNeedUpdate = true;
+			c++;
+		}, 0);
+
+//		for(var i = 0; i < objects.length; i++) {
+//			var curve = targets[i];
+//			var object = objects[i];
+//
+//
+//			var geometry = new THREE.BufferGeometry();
+//			geometry.vertices = curve.getPoints(100);
+//
+//			var tmp = object.geometry.vertices[object.geometry.vertices.length-1];
+//
+//			var tX = tmp.x;
+//			var tY = tmp.y;
+//			var tZ = tmp.z;
+//
+//
+//			for(var j = 0; j < geometry.vertices.length; j++) {
+//
+//				object.geometry.vertices.push(new THREE.Vector3(tX, tY, tZ));
+//
+//				var x = geometry.vertices[j].x;
+//				var y = geometry.vertices[j].y;
+//				var z = geometry.vertices[j].z;
+//
+//				new TWEEN.Tween(object.geometry.vertices[object.geometry.vertices.length-1])
+//					.to( { x: x, y: y, z: z }, Math.random() * 4000 )
+//					.easing( TWEEN.Easing.Exponential.InOut )
+//					.start();
+//
+//				tX = x;
+//				tY = y;
+//				tZ = z;
+//			}
+//			objects[i].geometry.verticesNeedUpdate = true;
+//		}
+
+//				new TWEEN.Tween( object.geometry.vertices[j] )
+//					.to( { x: target[j].x, y: target[j].y, z: target[j].z }, Math.random() * duration + duration )
+//					.easing( TWEEN.Easing.Exponential.InOut )
+//					.start();
+
+//		for(var i = 0; i < targets.length; i+=2) {
+//			filtered.push(targets[i]);
+//		}
+//
+//		for(let i = 0; i < objects.length; i++) {
+//			if(i!= 0) index = i+1;
+//
+//			var object = objects[i];
+//			var target = filtered[i];
+//
+//			const sphereGeomtry = new THREE.SphereBufferGeometry(10);
+//			const sphereMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+//			const helper = new THREE.Mesh( sphereGeomtry, sphereMaterial );
+//
+//			sceneGL.add(helper);
+//
+//			for(var j = 0; j < object.geometry.vertices.length; j++) {
+//
+//				new TWEEN.Tween( object.geometry.vertices[j] )
+//					.to( { x: target[j].x, y: target[j].y, z: target[j].z }, Math.random() * duration + duration )
+//					.easing( TWEEN.Easing.Exponential.InOut )
+//					.start();
+//			}
+//		}
+
+
+//		for(var i = 0; i < objects.length; i++) {
+//			var object = objects[i];
+//			var target = targets[i];
+//
+//			new TWEEN.Tween( object.geometry.vertices[1] )
+//							.to( { x: target.x, y: target.y, z: target.z }, Math.random() * duration + duration )
+//							.easing( TWEEN.Easing.Exponential.InOut )
+//							.start();
+//		}
 	}
 
 	function transform( targets, objects, duration ) {
